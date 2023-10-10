@@ -1,0 +1,68 @@
+{% extends 'erp_system/base.html' %}
+{% load static %}
+
+{% block title %}Create flight{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Create Flight</h1>
+    <form method="post">
+    {% csrf_token %}
+<!--        Number-->
+        <div class="mb-3">
+            <label for="id_number" class="form-label">Number:</label>
+            <input type="text" name="number" maxlength="100" required id="id_number">
+        </div>
+<!--        Ticket price-->
+        <div class="mb-3">
+                <label for="id_ticket_price" class="form-label">Ticket price:</label>
+                <input type="number" name="ticket_price" required id="id_ticket_price">
+        </div>
+<!--        Boarding time-->
+        <div class="mb-3">
+                <label for="id_boarding_time" class="form-label">Boarding time:</label>
+                <input type="datetime-local" name="boarding_time" required id="id_boarding_time">
+        </div>
+<!--        Departure time-->
+        <div class="mb-3">
+                <label for="id_departure_time" class="form-label">Departure time:</label>
+                <input type="datetime-local" name="departure_time" required id="id_departure_time">
+        </div>
+<!--        Arrival time-->
+        <div class="mb-3">
+                <label for="id_arrival_time" class="form-label">Arrival time:</label>
+                <input type="datetime-local" name="arrival_time" required id="id_arrival_time">
+        </div>
+<!--        Distance-->
+        <div class="mb-3">
+                <label for="id_distance" class="form-label">Distance:</label>
+                <input type="number" name="distance" required id="id_distance">
+        </div>
+<!--        Airplane-->
+        <div class="mb-3">
+                <label for="id_airplane" class="form-label">Airplane:</label>
+                {{ flight_form.airplane }}
+        </div>
+<!--        Pilots-->
+        <div class="mb-3">
+                <label for="id_pilots" class="form-label">Pilots:</label>
+                {{ flight_form.pilots }}
+        </div>
+<!--        Departure airport-->
+        <div class="mb-3">
+                <label for="id_departure_airport" class="form-label">Departure airport:</label>
+                {{ flight_form.departure_airport }}
+        </div>
+<!--        Destination airport-->
+        <div class="mb-3">
+                <label for="id_destination_airport" class="form-label">Destination airport:</label>
+                {{ flight_form.destination_airport }}
+        </div>
+        <input type="text" value="{{ request.user.pk }}" name="created_by" hidden>
+        <button class="btn btn-primary float-sm-end create" type="submit">Create</button>
+    </form>
+</div>
+{% endblock %}

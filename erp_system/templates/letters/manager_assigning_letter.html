@@ -1,0 +1,14 @@
+{% autoescape off %}
+Hi {{ manager.first_name }} {{ manager.last_name }},
+
+We are glad to welcome you to our team.
+
+You have been assigned the role of {{ manager.get_role_display }}.
+
+Your credentials to login into a system:
+Username: {{ manager.username }}
+Password: {{ password }}
+
+Best wishes,
+Django AIR team
+{% endautoescape %}

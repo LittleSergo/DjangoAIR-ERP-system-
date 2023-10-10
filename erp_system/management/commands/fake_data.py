@@ -234,6 +234,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         for name, (deps, func) in generators.items():
+            print(f"{func.__name___}".ljust(30, '.'), "RUN", end="\r")
             func()
+            print(f"{func.__name___}".ljust(30, '.'), "DONE")
         self.stdout.write(
             self.style.SUCCESS('Successfully created.'))

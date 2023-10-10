@@ -1,0 +1,20 @@
+{% if messages %}
+    {% for message in messages %}
+        {% if message.tags == 'success' %}
+            <div class="alert alert-success message-window" role="alert">
+                <span class="message">{{ message|safe|escape }}</span>
+                <button onclick="closeMessageWindow()" class="btn-close"></button>
+            </div>
+        {% elif message.tags == 'error' %}
+            <div class="alert alert-danger message-window" role="alert">
+                <span class="message">{{ message|safe|escape }}</span>
+                <button onclick="closeMessageWindow()" class="btn-close"></button>
+            </div>
+        {% elif message.tags == 'info' %}
+            <div class="alert alert-info message-window" role="alert">
+                <span class="message">{{ message|safe|escape }}</span>
+                <button onclick="closeMessageWindow()" class="btn-close"></button>
+            </div>
+        {% endif %}
+    {% endfor %}
+{% endif %}
