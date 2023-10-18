@@ -39,10 +39,12 @@ INSTALLED_APPS = [
     # third party apps
     'debug_toolbar',
     # project apps
-    'erp_system',
+    'staff',
+    'client',
+    'common_instances',
 ]
 
-AUTH_USER_MODEL = 'erp_system.User'
+AUTH_USER_MODEL = 'common_instances.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

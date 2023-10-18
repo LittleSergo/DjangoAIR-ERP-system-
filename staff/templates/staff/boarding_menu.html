@@ -1,0 +1,21 @@
+{% extends 'staff/base.html' %}
+{% load static %}
+
+{% block title %}Boarding menu{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>Boarding menu</h1>
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label for="id_ticket_code" class="form-label">Ticket code:</label>
+      <input type="text" name="ticket_code" maxlength="100" required id="id_ticket_code">
+    </div>
+    <button class="btn btn-primary float-sm-end create" type="submit">Search ticket</button>
+  </form>
+</div>
+{% endblock %}

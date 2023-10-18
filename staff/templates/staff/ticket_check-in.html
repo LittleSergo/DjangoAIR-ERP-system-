@@ -1,0 +1,21 @@
+{% extends 'staff/base.html' %}
+{% load static %}
+
+{% block title %}Ticket check-in{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>Ticket check-in</h1>
+  <p>Passenger: {{ ticket.passenger }}</p>
+  <p>Seat: {{ ticket.seat }}</p>
+  <form method="post">
+  {% csrf_token %}
+  {{ check_in_form.as_p }}
+  <button class="btn btn-primary float-sm-end" type="submit">Check-in</button>
+  </form>
+</div>
+
+{% endblock %}

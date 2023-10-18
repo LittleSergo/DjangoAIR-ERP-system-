@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    {% block head %}{% endblock %}
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{% static 'staff/base.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <title>{% block title %}{% endblock %} - DjangoAIR</title>
+</head>
+<body>
+<nav class="navbar bg-primary">
+  <div class="container-fluid">
+    <a href="" class="navbar-brand" style="color: white;">DjangoAIR</a>
+      <div class="float-sm-end">
+        {% if request.user.is_authenticated %}
+
+          <form method="post" action="" class="float-sm-end m-1">
+              {% csrf_token %}
+              <button class="btn btn-info" type="submit">LogOut</button>
+          </form>
+
+          <form action="" class="float-sm-end m-1">
+              <button class="btn btn-info" type="submit">
+              {{ request.user.username }}</button>
+          </form>
+
+          {% if request.user.role == "supervisor" or request.user.role == "check_in_manager" %}
+
+            <form action="{% url 'staff:check_in_menu' %}" class="float-sm-end m-1">
+              <button class="btn btn-info" type="submit">
+              Check in</button>
+            </form>
+
+          {% endif %}
+
+          {% if request.user.role == "supervisor" or request.user.role == "gate_manager" %}
+
+            <form action="{% url 'staff:boarding_menu' %}" class="float-sm-end m-1">
+              <button class="btn btn-info" type="submit">
+              Boarding</button>
+            </form>
+
+          {% endif %}
+
+          {% if request.user.role == "supervisor" %}
+
+          <div  class="dropdown float-sm-end">
+            <button  class="btn btn-info dropdown-toggle supervisor" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              Supervisor
+            </button >
+            <ul class="dropdown-menu">
+              <li><a class="dropdown-item" href="{% url 'staff:staff_flights' %}">Flights</a></li>
+              <li><a class="dropdown-item" href="{% url 'staff:staff_managers' %}">Managers</a></li>
+              <li><a class="dropdown-item" href="{% url 'staff:staff_pilots' %}">Pilots</a></li>
+              <li><a class="dropdown-item" href="{% url 'staff:staff_planes' %}">Planes</a></li>
+              <li><a class="dropdown-item" href="{% url 'staff:staff_options' %}">Options</a></li>
+              <li><a class="dropdown-item" href="{% url 'staff:staff_discounts' %}">Discounts</a></li>
+            </ul>
+          </div >
+
+          {% endif %}
+
+        {% else %}
+
+        <form action="" class="float-sm-end m-1">
+          <button class="btn btn-info" type="submit">Sign Up</button>
+        </form>
+        <form action="" class="float-sm-end m-1">
+          <button class="btn btn-info" type="submit">Log In</button>
+        </form>
+
+        {% endif %}
+
+      </div>
+  </div>
+</nav>
+{% include 'staff/messaging.html' %}
+{% block content %}{% endblock %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+<script src="{% static 'staff/base.js' %}"></script>
+</body>
+</html>

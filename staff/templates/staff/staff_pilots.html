@@ -1,0 +1,41 @@
+{% extends 'staff/base.html' %}
+{% load static %}
+
+{% block title %}Pilots{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row head">
+    <div class="col">
+      <h1>Pilots</h1>
+    </div>
+    <div class="col-md-auto">
+      <a href="{% url 'staff:create_pilot' %}" class="btn btn-primary create-flight">Create</a>
+    </div>
+  </div>
+</div>
+{% for pilot in pilots %}
+<div class="container">
+    <div class="card">
+      <div class="card-body">
+          <div class="row">
+            <div class="col">
+              <h5 class="card-title">{{ pilot }}</h5>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col">
+              <h5>Category: {{ pilot.category }}</h5>
+            </div>
+            <div class="col-2">
+              <a href="#" class="btn btn-danger float-sm-end">Delete</a>
+            </div>
+          </div>
+      </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

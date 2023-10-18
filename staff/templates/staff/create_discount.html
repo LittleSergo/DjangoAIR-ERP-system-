@@ -1,0 +1,34 @@
+{% extends 'staff/base.html' %}
+{% load static %}
+
+{% block title %}Create discount{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>Create Discount</h1>
+  <form method="post">
+  {% csrf_token %}
+    <div class="mb-3">
+      <label for="discount_name" class="form-label">Name:</label>
+      <input type="text" name="name" class="form-control" id="discount_name">
+    </div>
+    <div class="mb-3">
+      <label for="exampleInputPassword1" class="form-label">Amount</label>
+      <input type="number" name="amount" class="form-control" id="exampleInputPassword1">
+    </div>
+    <div class="mb-3 form-check">
+      <input type="checkbox" name="is_percentage" class="form-check-input" id="is_percentage">
+      <label class="form-check-label" for="is_percentage">Is percentage</label>
+    </div>
+    <div class="mb-3">
+      <label for="promo_code" class="form-label">Promo code:</label>
+      <input type="text" name="promo_code" class="form-control" id="promo_code">
+    </div>
+    <button class="btn btn-primary float-sm-end" type="submit">Create</button>
+  </form>
+</div>
+
+{% endblock %}

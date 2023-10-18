@@ -1,0 +1,36 @@
+{% extends 'staff/base.html' %}
+{% load static %}
+
+{% block title %}Discounts{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="row head">
+    <div class="col">
+      <h1>Discounts</h1>
+    </div>
+    <div class="col-md-auto">
+      <a href="{% url 'staff:create_discount' %}" class="btn btn-primary create-flight">Create</a>
+    </div>
+  </div>
+</div>
+{% for discount in discounts %}
+<div class="container">
+    <div class="card">
+      <div class="card-body">
+          <div class="row">
+            <div class="col">
+              <h5 class="card-title">{{ discount }}</h5>
+            </div>
+            <div class="col-2">
+              <a href="#" class="btn btn-danger float-sm-end">Delete</a>
+            </div>
+          </div>
+      </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}
