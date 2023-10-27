@@ -1,4 +1,22 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
+
+
+class User(AbstractUser):
+    """User model for staff side. Standard User model supplemented
+    with field role which will give permissions for users."""
+    ROLES = [
+        ('customer', 'Customer'),
+        ('gate_manager', 'Gate manager'),
+        ('check_in_manager', 'Check-in manager'),
+        ('supervisor', 'Supervisor')
+    ]
+    role = models.CharField(choices=ROLES, default='customer',
+                            max_length=30)
+    email_is_verified = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.username
 
 
 class Pilot(models.Model):  # staff

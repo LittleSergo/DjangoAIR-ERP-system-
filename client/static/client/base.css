@@ -1,0 +1,40 @@
+.supervisor {
+  margin-top: 4px;
+  margin-right: 4px;
+}
+
+.container {
+  width: 800px!important;
+}
+
+.head {
+  padding: 15px;
+}
+
+.create-flight {
+  margin-top: 8px;
+}
+
+.card {
+  margin-bottom: 15px;
+}
+
+.message-window {
+    width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+    display: grid;
+    grid-template-columns: 28fr 1fr;
+}
+
+input, select {
+  margin-bottom: 10px!important;
+}
+
+.hide {
+  display: none;
+}
+
+.create {
+  margin-bottom: 100px;
+}

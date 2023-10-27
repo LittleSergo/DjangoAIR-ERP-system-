@@ -4,15 +4,13 @@ from datetime import datetime, timedelta
 from django.test import TestCase
 
 from ..models import (
-    User, Flight, Airport, Purchase, Passenger, Ticket, Seat,
+    Flight, Airport, Passenger, Ticket, Seat,
     Airplane, Option, Discount, SeatType
 )
 
 
 class ModelsTests(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser')
-
         airports = [('Borispil', 'KBP'), ('Zhuliany', 'IEV')]
         self.airports = [
             Airport.objects.create(
@@ -48,16 +46,10 @@ class ModelsTests(TestCase):
             arrival_time=datetime.now() + timedelta(hours=3),
             distance=80,
             airplane=self.airplane,
-            created_by=self.user,
             departure_airport=self.airports[0],
             destination_airport=self.airports[1],
         )
         self.flight.save()
-
-    def test_user_model(self):
-        """Get created User object and check data."""
-        user = User.objects.get(username='testuser')
-        self.assertEquals(user.role, 'customer')
 
     def test_airport_model(self):
         """Get created airport object and check."""
@@ -116,13 +108,6 @@ class ModelsTests(TestCase):
 
         passenger = Passenger.objects.get(passport_number='testnumber')
         self.assertEquals(passenger.first_name, 'Jim')
-
-    def test_purchase_model(self):
-        """Create and get purchase object and check."""
-        Purchase.objects.create(user=self.user)
-
-        purchase = Purchase.objects.get(user=self.user)
-        self.assertFalse(purchase.is_paid)
 
     def test_ticket_model(self):
         """Create and get ticket object and check."""

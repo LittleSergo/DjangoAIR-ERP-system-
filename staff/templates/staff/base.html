@@ -11,16 +11,16 @@
 <body>
 <nav class="navbar bg-primary">
   <div class="container-fluid">
-    <a href="" class="navbar-brand" style="color: white;">DjangoAIR</a>
+    <a href="{% url 'staff:staff_flights' %}" class="navbar-brand" style="color: white;">DjangoAIR</a>
       <div class="float-sm-end">
         {% if request.user.is_authenticated %}
 
-          <form method="post" action="" class="float-sm-end m-1">
+          <form method="post" action="{% url 'staff:log_out' %}" class="float-sm-end m-1">
               {% csrf_token %}
               <button class="btn btn-info" type="submit">LogOut</button>
           </form>
 
-          <form action="" class="float-sm-end m-1">
+          <form action="{% url 'staff:profile' request.user.id %}" class="float-sm-end m-1">
               <button class="btn btn-info" type="submit">
               {{ request.user.username }}</button>
           </form>
@@ -63,10 +63,7 @@
 
         {% else %}
 
-        <form action="" class="float-sm-end m-1">
-          <button class="btn btn-info" type="submit">Sign Up</button>
-        </form>
-        <form action="" class="float-sm-end m-1">
+        <form action="{% url 'staff:log_in' %}" class="float-sm-end m-1">
           <button class="btn btn-info" type="submit">Log In</button>
         </form>
 

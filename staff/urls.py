@@ -46,6 +46,17 @@ boarding_urlpatterns = [
          name='passenger_boarding')
 ]
 
+auth_urlpatterns = [
+    path('log_in/', views.login_user, name='log_in'),
+    path('log_out', views.logout_user, name='log_out')
+]
+
+users_urlpatterns = [
+    path('profile/<user_id>/', views.profile, name='profile'),
+    path('profile/change_password/<uidb64>/<token>/', views.change_password,
+         name='change_password')
+]
+
 urlpatterns = [
     path('flights/', include(flight_urlpatterns)),
     path('airplanes/', include(airplanes_urlpatterns)),
@@ -55,4 +66,6 @@ urlpatterns = [
     path('discounts/', include(discounts_urlpatterns)),
     path('check-in/', include(check_in_urlpatterns)),
     path('boarding/', include(boarding_urlpatterns)),
+    path('auth/', include(auth_urlpatterns)),
+    path('users/', include(users_urlpatterns))
 ]

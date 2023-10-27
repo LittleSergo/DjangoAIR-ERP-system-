@@ -1,24 +1,7 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
 
 
-class User(AbstractUser):  # common
-    """User model. Standard User model supplemented with field role which
-    will give permissions for users."""
-    ROLES = [
-        ('customer', 'Customer'),
-        ('gate_manager', 'Gate manager'),
-        ('check_in_manager', 'Check-in manager'),
-        ('supervisor', 'Supervisor')
-    ]
-    role = models.CharField(choices=ROLES, default='customer',
-                            max_length=30)
-
-    def __str__(self):
-        return self.username
-
-
-class Airport(models.Model):  # common
+class Airport(models.Model):
     """Airport model. Contains name of airport, location data and
     IATA code."""
     name = models.CharField(max_length=100)
@@ -30,7 +13,7 @@ class Airport(models.Model):  # common
         return self.name
 
 
-class Airplane(models.Model):  # staff
+class Airplane(models.Model):
     """Represents the plane that will be assigned to the flights"""
     number = models.CharField(max_length=100)
 
@@ -38,7 +21,7 @@ class Airplane(models.Model):  # staff
         return self.number
 
 
-class SeatType(models.Model):  # common
+class SeatType(models.Model):
     """Represents the seat type and the multiplier that determines how
     much more the ticket will cost."""
     seat_type = models.CharField(max_length=100)
@@ -48,7 +31,7 @@ class SeatType(models.Model):  # common
         return self.seat_type
 
 
-class Seat(models.Model):  # common
+class Seat(models.Model):
     """Represents a seat that belongs to a specific aircraft and will
     be reserved by passengers."""
     number = models.CharField(max_length=100)
@@ -61,7 +44,7 @@ class Seat(models.Model):  # common
         return self.number
 
 
-class Flight(models.Model):  # common
+class Flight(models.Model):
     """Model that represents flights."""
     number = models.CharField(max_length=100)
     ticket_price = models.IntegerField()
@@ -71,8 +54,6 @@ class Flight(models.Model):  # common
     distance = models.IntegerField()
     airplane = models.ForeignKey(Airplane, on_delete=models.CASCADE,
                                  related_name='flights')
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE,
-                                   related_name='flights')
     departure_airport = models.ForeignKey(Airport,
                                           on_delete=models.CASCADE,
                                           related_name='departing_lights')
@@ -84,7 +65,7 @@ class Flight(models.Model):  # common
         return self.number
 
 
-class Discount(models.Model):  # common
+class Discount(models.Model):
     """Represents discount that can reduce the price of ticket."""
     name = models.CharField(max_length=100)
     is_percentage = models.BooleanField(default=False)
@@ -95,7 +76,7 @@ class Discount(models.Model):  # common
         return self.name
 
 
-class Option(models.Model):  # common
+class Option(models.Model):
     """Represents additional services during the flight."""
     name = models.CharField(max_length=100)
     price = models.IntegerField()
@@ -104,7 +85,7 @@ class Option(models.Model):  # common
         return self.name
 
 
-class Passenger(models.Model):  # common
+class Passenger(models.Model):
     """Represents passenger who will fly at the flight."""
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
@@ -114,16 +95,7 @@ class Passenger(models.Model):  # common
         return f'{self.first_name} {self.last_name}'
 
 
-class Purchase(models.Model):  # common
-    """Performs the function of checking whether payment for
-    tickets has been made"""
-    is_paid = models.BooleanField(default=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE,
-                             related_name='purchases')
-    created = models.DateTimeField(auto_now_add=True)
-
-
-class Ticket(models.Model):  # common
+class Ticket(models.Model):
     """Represents ticket that will allow people to check in and fly
     on particular flight."""
     ticket_code = models.CharField(max_length=100)
@@ -137,8 +109,5 @@ class Ticket(models.Model):  # common
     passenger = models.ForeignKey(Passenger, on_delete=models.CASCADE,
                                   related_name='tickets', blank=True,
                                   null=True)
-    purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE,
-                                 related_name='tickets', blank=True,
-                                 null=True)
     flight = models.ForeignKey(Flight, on_delete=models.CASCADE,
                                related_name='tickets')

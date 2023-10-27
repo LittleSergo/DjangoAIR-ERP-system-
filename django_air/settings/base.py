@@ -44,7 +44,11 @@ INSTALLED_APPS = [
     'common_instances',
 ]
 
+# user for staff app
 AUTH_USER_MODEL = 'common_instances.User'
+
+# user for client app
+# AUTH_USER_MODEL = 'client.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -111,6 +115,13 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'static'
+
+# login url for staff app
+LOGIN_URL = '/staff/auth/log_in/'
+
+# login url for client app
+# LOGIN_URL = '/auth/login/'
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
