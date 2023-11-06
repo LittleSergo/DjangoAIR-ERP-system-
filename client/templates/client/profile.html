@@ -1,0 +1,176 @@
+{% extends 'client/base.html' %}
+{% load static %}
+
+{% block title %}{{ user.username }}{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>{{ user.username }}</h1>
+</div>
+<div class="container">
+    <div class="card">
+      <div class="card-body">
+          <div class="row">
+            <div class="col-3">
+              <h5 class="card-title">First name: </h5>
+            </div>
+            <div class="col">
+              <h5 class="card-title">{{ user.first_name }}</h5>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-3">
+              <h5 class="card-title">Last name:</h5>
+            </div>
+            <div class="col">
+              <h5 class="card-title">{{ user.last_name }}</h5>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-3">
+              <h5 class="card-title">Email:</h5>
+            </div>
+            <div class="col">
+              <h5 class="card-title">{{ user.email }}</h5>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-3">
+              <h5 class="card-title">Password:</h5>
+            </div>
+            <div class="col">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                  Change password
+                </button>
+            </div>
+          </div>
+      </div>
+    </div>
+</div>
+<div class="container">
+  {% if future_flights %}
+  <h2>Future flights:</h2>
+  {% for purchase in future_flights %}
+  {% with purchase.tickets.all|first as ticket %}
+  <div class="card">
+      <div class="card-body">
+          <div class="row">
+            <div class="col-3">
+              <h5 class="card-title">Flight number: </h5>
+            </div>
+            <div class="col">
+              <h5 class="card-title">{{ ticket.flight }}</h5>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-3">
+              <h5 class="card-title">Departure:</h5>
+            </div>
+            <div class="col">
+              <h5 class="card-title">{{ ticket.flight.departure_airport}} {{ ticket.flight.departure_time }}</h5>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-3">
+              <h5 class="card-title">Destination:</h5>
+            </div>
+            <div class="col">
+              <h5 class="card-title">{{ ticket.flight.destination_airport}} {{ ticket.flight.arrival_time }}</h5>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-3">
+              <h5 class="card-title">Tickets:</h5>
+            </div>
+            <div class="col">
+               <h5 class="card-title">{{ purchase.tickets.count }}</h5>
+            </div>
+          </div>
+          {% if not purchase.is_paid %}
+          <form action="{% url 'client:checkout' purchase.id %}">
+              <button type="submit" class="btn btn-primary float-sm-end">
+                  Checkout and pay
+              </button>
+          </form>
+          {% else %}
+          <form action="{% url 'client:online_checkin' purchase.id %}">
+              <button type="submit" class="btn btn-primary float-sm-end">
+                  Online check-in
+              </button>
+          </form>
+          {% endif %}
+      </div>
+  </div>
+  {% endwith %}
+  {% endfor %}
+  {% endif %}
+  {% if previous_flights %}
+  <h2>Previous flights:</h2>
+  {% for purchase in previous_flights %}
+  {% with purchase.tickets.all|first as ticket %}
+  <div class="card">
+      <div class="card-body">
+          <div class="row">
+            <div class="col-3">
+              <h5 class="card-title">Flight number: </h5>
+            </div>
+            <div class="col">
+              <h5 class="card-title">{{ ticket.flight }}</h5>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-3">
+              <h5 class="card-title">Departure:</h5>
+            </div>
+            <div class="col">
+              <h5 class="card-title">{{ ticket.flight.departure_airport}} {{ ticket.flight.departure_time }}</h5>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-3">
+              <h5 class="card-title">Destination:</h5>
+            </div>
+            <div class="col">
+              <h5 class="card-title">{{ ticket.flight.destination_airport}} {{ ticket.flight.arrival_time }}</h5>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-3">
+              <h5 class="card-title">Tickets:</h5>
+            </div>
+            <div class="col">
+               <h5 class="card-title">{{ purchase.tickets.count }}</h5>
+            </div>
+          </div>
+      </div>
+  </div>
+  {% endwith %}
+  {% endfor %}
+  {% endif %}
+</div>
+<!--Modal-->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="exampleModalLabel">Confirm your current password.</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form method="post">
+            {% csrf_token %}
+            <label for="id_password" class="form-label">Password:</label>
+            <input type="password" name="password" maxlength="100" required id="id_password">
+            <button class="btn btn-primary float-sm-end" type="submit">Change password</button>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

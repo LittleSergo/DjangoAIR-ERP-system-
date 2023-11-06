@@ -49,7 +49,6 @@ class ModelsTests(TestCase):
             departure_airport=self.airports[0],
             destination_airport=self.airports[1],
         )
-        self.flight.save()
 
     def test_airport_model(self):
         """Get created airport object and check."""

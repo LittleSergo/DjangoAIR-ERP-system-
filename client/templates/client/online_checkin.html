@@ -1,0 +1,17 @@
+{% extends 'client/base.html' %}
+{% load static %}
+{% block title %}Online Check-In{% endblock %}
+{% block content %}
+<div class="container">
+    <h1>Online Check-In</h1>
+    <form method="post">
+    {% csrf_token %}
+      {{ formset.management_form }}
+      {% for form in formset %}
+      {{ form.as_p }}
+      {% endfor %}
+    <button class="btn btn-outline-success" type="submit">Check-in</button>
+    </form>
+</div>
+
+{% endblock %}

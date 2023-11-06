@@ -23,3 +23,7 @@ class Purchase(models.Model):
                              related_name='purchases')
     created = models.DateTimeField(auto_now_add=True)
     tickets = models.ManyToManyField('common_instances.Ticket')
+
+    def total_bill(self):
+        """Return the price for all tickets."""
+        return sum([ticket.full_price() for ticket in self.tickets.all()])

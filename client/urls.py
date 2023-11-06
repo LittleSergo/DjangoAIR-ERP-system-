@@ -4,27 +4,42 @@ from client import views
 
 app_name = 'client'
 
-auth_urlpatterns = [
+auth_urls = [
     path('signup/', views.signup, name='signup'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_user, name='logout'),
 ]
 
-user_urlpatterns = [
-    # path('<user_id>/profile/', name='profile'),
-    # path('<user_id>/profile/flights', name='profile_flights'),
-    # path('<user_id>/profile/flights/check-in/', name='online_checkin'),
+user_urls = [
+    path('profile/', views.user_profile, name='profile'),
+    path('profile/change_password/<uidb64>/<token>/',
+         views.change_password, name='change_password'),
+    path('profile/purchases/<purchase_id>/check-in/',
+         views.online_checkin, name='online_checkin'),
 ]
 
-main_urlpatterns = [
-    # path('', name='home'),
-    # path('flights/', name='flights'),
-    # path('flights/<flight_id>/tickets/', name='tickets'),
-    # path('payment/<payment_id>/', name='payment'),
+main_urls = [
+    path('', views.home, name='home'),
+    path('flights_search/', views.flights_search, name='flights_search'),
+    path('flights/<flight_id>/buy_tickets/', views.buy_tickets,
+         name='buy_tickets'),
+    path('checkout/<purchase_id>/', views.checkout_view, name='checkout'),
+]
+
+payment_urls = [
+    path('create_payment/<purchase_id>/', views.create_payment,
+         name='create_payment'),
+    path('execute_payment/<purchase_id>/', views.execute_payment,
+         name='execute_payment'),
+    path('payment_success/<purchase_id>', views.payment_success,
+         name='payment_success'),
+    path('payment_failed/<purchase_id>', views.payment_failed,
+         name='payment_failed'),
 ]
 
 urlpatterns = [
-    path('auth/', include(auth_urlpatterns)),
-    path('users/', include(user_urlpatterns)),
-    path('', include(main_urlpatterns)),
+    path('auth/', include(auth_urls)),
+    path('users/', include(user_urls)),
+    path('', include(main_urls)),
+    path('payments/', include(payment_urls))
 ]

@@ -1,0 +1,58 @@
+{% extends 'client/base.html' %}
+{% load static %}
+{% block title %}Bill{% endblock %}
+{% block content %}
+<div class="container">
+    <h1>Bill</h1>
+      {% for ticket in purchase.tickets.all %}
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <div class="row">
+              <div class="col-2">
+                {{ ticket.ticket_code }}
+              </div>
+            </div>
+          </h5>
+          <br>
+            <div>
+              <div class="row">
+                <div class="col-4">Passenger: {{ ticket.passenger }}</div>
+                <div class="col">Seat: {{ ticket.seat }}</div>
+              </div>
+              <div class="row">
+                <div class="col-4">Departure:</div>
+                <div class="col">{{ ticket.flight.departure_airport.IATA_code }} {{ticket.flight.departure_time|date:"H:i d.m.y" }}</div>
+              </div>
+              <div class="row">
+                <div class="col-4">Destination:</div>
+                <div class="col">{{ ticket.flight.destination_airport.IATA_code }} {{ ticket.flight.arrival_time|date:"H:i d.m.y" }}</div>
+              </div>
+              <div class="row">
+                <div class="col-4">Options:</div>
+                <div class="col">{% for option in ticket.options.all %} {{ option }}({{ option.price }}€), {% empty %}No options.{% endfor %}</div>
+              </div>
+              <div class="row">
+                <div class="col-4">Class:</div>
+                <div class="col">{{ ticket.seat.seat_type }}</div>
+              </div>
+              <div class="row">
+                <div class="col-4">Ticket price:</div>
+                <div class="col">{{ ticket.price }}€</div>
+              </div>
+              <div class="row">
+                <div class="col"><h5 class="float-sm-end">Full price: {{ ticket.full_price }}€</h5></div>
+              </div>
+            </div>
+        </div>
+    </div>
+   {% endfor %}
+  <br>
+    <div class="row">
+      <div class="col"><h3 class="float-sm-end">Total: {{ purchase.total_bill }}€</h3></div>
+    </div>
+    <div class="row">
+      <div class="col"><a href="{% url 'client:create_payment' purchase.id %}" class="btn btn-outline-success float-sm-end">Pay with PayPal</a> </div>
+    </div>
+</div>
+{% endblock %}

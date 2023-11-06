@@ -1,0 +1,56 @@
+{% extends 'client/base.html' %}
+{% load static %}
+{% block title %}Buy tickets{% endblock %}
+{% block content %}
+<div class="container">
+    <h1>Buy tickets</h1>
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">
+            <div class="row">
+              <div class="col-2">
+                {{ flight.number }}
+              </div>
+              <div class="col">
+                {{ flight.departure_airport }}
+                -> {{ flight.destination_airport }}
+              </div>
+            </div>
+          </h5>
+          <br>
+            <div>
+              <div class="row">
+                <div class="col-4">Boarding:</div>
+                <div class="col">{{flight.boarding_time|date:"H:i d.m.y" }}</div>
+              </div>
+              <div class="row">
+                <div class="col-4">Departure:</div>
+                <div class="col">{{ flight.departure_airport.IATA_code }} {{flight.departure_time|date:"H:i d.m.y" }}</div>
+              </div>
+              <div class="row">
+                <div class="col-4">Destination:</div>
+                <div class="col">{{ flight.destination_airport.IATA_code }} {{flight.arrival_time|date:"H:i d.m.y" }}</div>
+              </div>
+              <div class="row">
+                <div class="col-4">Business tickets available:</div>
+                <div class="col">{{ flight.available_business_tickets }}</div>
+              </div>
+              <div class="row">
+                <div class="col-4">Economy tickets available:</div>
+                <div class="col">{{ flight.available_economy_tickets }}</div>
+              </div>
+            </div>
+        </div>
+
+    <form method="post">
+    {% csrf_token %}
+      {{ formset.management_form }}
+      {% for form in formset %}
+      <h4><b> Passenger {{ forloop.counter }}</b></h4>
+      {{ form.as_p }}
+      {% endfor %}
+    <button class="btn btn-outline-success float-sm-end" type="submit">Buy</button>
+    </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,4 +1,5 @@
 from django.db import models
+from decimal import Decimal
 
 
 class Airport(models.Model):
@@ -10,7 +11,7 @@ class Airport(models.Model):
     IATA_code = models.CharField(max_length=4)
 
     def __str__(self):
-        return self.name
+        return f"{self.name} - {self.city}, {self.country}"
 
 
 class Airplane(models.Model):
@@ -64,6 +65,22 @@ class Flight(models.Model):
     def __str__(self):
         return self.number
 
+    def available_business_tickets(self):
+        """Return how much business class tickets is available."""
+        return self.tickets.filter(is_available=True,
+                                   seat__seat_type=2).count()
+
+    def available_economy_tickets(self):
+        """Return how much economy class tickets is available."""
+        return self.tickets.filter(is_available=True,
+                                   seat__seat_type=1).count()
+
+    def business_class_ticket_price(self):
+        """Return a price of business class ticket."""
+        multiplier = SeatType.objects.get(
+            seat_type='Business').price_multiplier
+        return round(self.ticket_price * multiplier, 2)
+
 
 class Discount(models.Model):
     """Represents discount that can reduce the price of ticket."""
@@ -111,3 +128,23 @@ class Ticket(models.Model):
                                   null=True)
     flight = models.ForeignKey(Flight, on_delete=models.CASCADE,
                                related_name='tickets')
+
+    def price(self):
+        """Return price of the ticket depends on seat type."""
+        return Decimal(
+            self.flight.ticket_price * self.seat.seat_type.
+            price_multiplier
+        )
+
+    def full_price(self):
+        """Return full price considering the seat type and the options"""
+        price = self.price()
+        for option in self.options.all():
+            price += option.price
+        if self.discount:
+            if self.discount.is_percentage:
+                return round(
+                    price - (price / 100 * self.discount.amount), 2
+                )
+            price -= self.discount.amount
+        return round(price, 2)

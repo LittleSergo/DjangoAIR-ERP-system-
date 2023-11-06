@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 
 import environ
+import paypalrestsdk
 
 env = environ.Env()
 environ.Env.read_env()  # reading .env file
@@ -45,7 +46,7 @@ INSTALLED_APPS = [
 ]
 
 # user for staff app
-AUTH_USER_MODEL = 'common_instances.User'
+AUTH_USER_MODEL = 'staff.User'
 
 # user for client app
 # AUTH_USER_MODEL = 'client.User'
@@ -136,3 +137,12 @@ EMAIL_HOST_USER = 'django.gramm99@gmail.com'
 EMAIL_HOST_PASSWORD = env.str('SMTP_EMAIL_PASSWORD')
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+
+PAYPAL_CLIENT_ID = env.str('PAYPAL_CLIENT_ID')
+PAYPAL_SECRET = env.str('PAYPAL_SECRET')
+
+paypalrestsdk.configure({
+    "mode": "sandbox",
+    "client_id": PAYPAL_CLIENT_ID,
+    "client_secret": PAYPAL_SECRET,
+})

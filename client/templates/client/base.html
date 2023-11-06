@@ -11,7 +11,7 @@
 <body>
 <nav class="navbar bg-primary">
   <div class="container-fluid">
-    <a href="" class="navbar-brand" style="color: white;">DjangoAIR</a>
+    <a href="{% url 'client:home' %}" class="navbar-brand" style="color: white;">DjangoAIR</a>
       <div class="float-sm-end">
         {% if request.user.is_authenticated %}
 
@@ -20,7 +20,7 @@
             <button class="btn btn-info" type="submit">LogOut</button>
           </form>
 
-          <form action="" class="float-sm-end m-1">
+          <form action="{% url 'client:profile' %}" class="float-sm-end m-1">
             <button class="btn btn-info" type="submit">
             {{ request.user.username }}</button>
           </form>
