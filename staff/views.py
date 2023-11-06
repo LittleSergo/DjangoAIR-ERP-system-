@@ -23,8 +23,9 @@ from common_instances.models import (
 from .models import Pilot, User
 from .forms import (
     CreateFlight, CreatePilot, CreateManager, CreatePlane,
-    CreateOption, CheckInForm, CreateDiscount, ResetPasswordForm
+    CreateOption, CheckInForm, CreateDiscount
 )
+from common_instances.forms import ResetPasswordForm
 
 
 PASSWORD_RESET_TOKEN_GENERATOR = PasswordResetTokenGenerator()
@@ -41,9 +42,9 @@ def staff_flights(request):
 
 def send_pilot_assigning_letter(flight):
     """Inform a pilot that he was assigned to a flight."""
-    subject = "You were assigned to aflight."
+    subject = "You were assigned to a flight."
     for pilot in flight.pilots.all():
-        message = render_to_string('letters/assigning_pilots_to_flight.html', {
+        message = render_to_string('staff/letters/assigning_pilots_to_flight.html', {
             'pilot': pilot,
             'flight': flight
         })
@@ -192,7 +193,7 @@ def staff_managers(request):
 def send_manager_assigning_letter(manager, password: str):
     """Sent email to manager whose was assigned."""
     subject = "Welcome to Django AIR team"
-    message = render_to_string('letters/manager_assigning_letter.html', {
+    message = render_to_string('staff/letters/manager_assigning_letter.html', {
         'manager': manager,
         'password': password
     })
@@ -401,7 +402,11 @@ def login_user(request):
         return render(request, 'staff/login.html', {
             'form': AuthenticationForm()
         })
-
+    # Managers receive their credentials by emails and first
+    # login will verify their email
+    if not user.email_is_verified:
+        user.email_is_verified = True
+        user.save()
     messages.success(request, f"Successfully logged in as {user.username}.")
     login(request, user)
     return redirect('staff:staff_flights')
@@ -426,15 +431,15 @@ def send_password_reset_email(request, user):
     :return:
     """
     mail_subject = "Reset password."
-    message = render_to_string("letters/reset_password_letter.html", {
+    message = render_to_string("staff/letters/reset_password_letter.html", {
         'user': user,
         'domain': get_current_site(request).domain,
         'uid': urlsafe_base64_encode(force_bytes(user.pk)),
         'token': PASSWORD_RESET_TOKEN_GENERATOR.make_token(user),
         'protocol': 'https' if request.is_secure() else 'http'
     })
-    email = EmailMessage(mail_subject, message, to=[user.email])
-    email.send()
+    mail = EmailMessage(mail_subject, message, to=[user.email])
+    mail.send()
 
 
 @login_required
@@ -462,7 +467,6 @@ def profile(request, user_id):
     })
 
 
-@login_required
 def change_password(request, uidb64, token):
     """Send an email with instructions for password changing.
     :param request:
@@ -483,6 +487,7 @@ def change_password(request, uidb64, token):
             })
         if ResetPasswordForm(request.POST).is_valid():
             user.set_password(request.POST['password'])
+            user.save()
             messages.success(request, 'Password was changed successfully.')
             return redirect('staff:profile', user.id)
 
