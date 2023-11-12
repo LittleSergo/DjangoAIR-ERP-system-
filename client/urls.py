@@ -27,13 +27,13 @@ main_urls = [
 ]
 
 payment_urls = [
-    path('create_payment/<purchase_id>/', views.create_payment,
+    path('create/<purchase_id>/<payment_method>/', views.create_payment,
          name='create_payment'),
-    path('execute_payment/<purchase_id>/', views.execute_payment,
+    path('execute/<purchase_id>/', views.execute_payment,
          name='execute_payment'),
-    path('payment_success/<purchase_id>', views.payment_success,
+    path('success/<purchase_id>/', views.payment_success,
          name='payment_success'),
-    path('payment_failed/<purchase_id>', views.payment_failed,
+    path('failed/<purchase_id>/', views.payment_failed,
          name='payment_failed'),
 ]
 
@@ -41,5 +41,5 @@ urlpatterns = [
     path('auth/', include(auth_urls)),
     path('users/', include(user_urls)),
     path('', include(main_urls)),
-    path('payments/', include(payment_urls))
+    path('payments/', include(payment_urls)),
 ]

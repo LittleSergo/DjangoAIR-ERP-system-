@@ -141,6 +141,26 @@ EMAIL_USE_TLS = True
 PAYPAL_CLIENT_ID = env.str('PAYPAL_CLIENT_ID')
 PAYPAL_SECRET = env.str('PAYPAL_SECRET')
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+
+    # Define the loggers
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
 paypalrestsdk.configure({
     "mode": "sandbox",
     "client_id": PAYPAL_CLIENT_ID,

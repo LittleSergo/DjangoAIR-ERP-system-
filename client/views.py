@@ -1,4 +1,7 @@
+import logging
 import paypalrestsdk
+import datetime
+
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
@@ -8,20 +11,20 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMessage
 from django.db import transaction
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.template.loader import render_to_string
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.urls import reverse
 
-import datetime
-
 from pytz import timezone
 
-from common_instances.models import Flight, Passenger, Ticket, SeatType, Discount
+from common_instances.models import Flight, Passenger, Discount
+from common_instances.forms import ResetPasswordForm
 from .forms import SignupForm, CheckInFormSet, SearchForFlightsForm, build_formset_with_definite_forms
 from .models import User, Purchase
-from common_instances.forms import ResetPasswordForm
+from .payment_methods import paypal_payment
+from .pdf_templates import create_receipt_pdf, create_ticket_pdf
 
 PASSWORD_RESET_TOKEN_GENERATOR = PasswordResetTokenGenerator()
 
@@ -317,6 +320,7 @@ def buy_tickets(request, flight_id):
     })
 
 
+@login_required
 def checkout_view(request, purchase_id):
     """Show total bill for tickets.
     :param request:
@@ -330,43 +334,21 @@ def checkout_view(request, purchase_id):
         })
 
 
-def create_payment(request, purchase_id):
-    """Create payment and redirect to payment page on PayPal,
+@login_required
+def create_payment(request, purchase_id: int,
+                   payment_method: str = 'paypal'):
+    """Create payment and redirect to payment page,
     or to payment failed page if payment is failed.
+    :param payment_method:
     :param request:
     :param purchase_id:
     :return:
     """
-    purchase = Purchase.objects.get(id=purchase_id)
-    payment = paypalrestsdk.Payment({
-        "intent": "sale",
-        "payer": {
-            "payment_method": "paypal",
-        },
-        "redirect_urls": {
-            "return_url": request.build_absolute_uri(reverse(
-                'client:execute_payment', args=[purchase_id]
-            )),
-            "cancel_url": request.build_absolute_uri(reverse(
-                'client:payment_failed', args=[purchase_id]
-            )),
-        },
-        "transactions": [
-            {
-                "amount": {
-                    "total": str(purchase.total_bill()),
-                    "currency": "EUR",
-                },
-                "description": "Payment for flight tickets",
-            }
-        ],
-    })
-
-    if payment.create():
-        return redirect(payment.links[1].href)  # Redirect to PayPal for payment
-    return redirect('client:payment_failed')
+    if payment_method == 'paypal':
+        return paypal_payment(request, purchase_id)
 
 
+@login_required
 def execute_payment(request, purchase_id):
     """Check is payment successful or not and redirect to
     appropriate page.
@@ -376,14 +358,35 @@ def execute_payment(request, purchase_id):
     """
     payment_id = request.GET.get('paymentId')
     payer_id = request.GET.get('PayerID')
-
     payment = paypalrestsdk.Payment.find(payment_id)
 
     if payment.execute({"payer_id": payer_id}):
         return redirect('client:payment_success', purchase_id)
+    logger = logging.getLogger('django')
+    logger.error(
+        f"{datetime.datetime.now().strftime('%d/%m/%Y %H:%M')}"
+        f" - Payment error: {payment.error}"
+    )
     return redirect('client:payment_failed', purchase_id)
 
 
+# That function will be a celery task
+def send_email_with_receipt_and_ticket(purchase_id):
+    """Send email with receipt and ticket."""
+    purchase = Purchase.objects.get(id=purchase_id)
+    mail_subject = "DjangoAIR - your tickets."
+    message = render_to_string("client/letters/successful_purchase.html", {
+        'user': purchase.user,
+    })
+    mail = EmailMessage(mail_subject, message, to=[purchase.user.email])
+    mail.attach('receipt.pdf', create_receipt_pdf(purchase),
+                'application/pdf')
+    mail.attach('tickets.pdf', create_ticket_pdf(purchase),
+                'application/pdf')
+    mail.send()
+
+
+@login_required
 def payment_success(request, purchase_id):
     """Set purchase is paid to true and redirect to profile page with
     message about successful payment.
@@ -394,10 +397,15 @@ def payment_success(request, purchase_id):
     purchase = Purchase.objects.get(id=purchase_id)
     purchase.is_paid = True
     purchase.save()
-    messages.success(request, 'Payment succeed. Have a nice flight!')
+    send_email_with_receipt_and_ticket(purchase_id)
+    messages.success(
+        request, 'Payment succeed. We sent you your tickets and receipt '
+                 'on your email. Have a nice flight!'
+    )
     return redirect('client:profile')
 
 
+@login_required
 def payment_failed(request, purchase_id):
     """Redirect to check out page with message about failed payment.
     :param request:
