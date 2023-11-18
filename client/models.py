@@ -23,6 +23,7 @@ class Purchase(models.Model):
                              related_name='purchases')
     created = models.DateTimeField(auto_now_add=True)
     tickets = models.ManyToManyField('common_instances.Ticket')
+    reminder_is_sent = models.BooleanField(default=False)
 
     def total_bill(self):
         """Return the price for all tickets."""

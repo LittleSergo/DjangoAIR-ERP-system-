@@ -1,0 +1,13 @@
+{% autoescape off %}
+Hi {{ pilot }},
+
+We remind you about coming flight you were assigned to,
+from {{ flight.departure_airport }}
+to {{ flight.destination_airport }}
+at {{ flight.departure_time|date:"H:i d.m.y" }}.
+
+We are happy to see you in our team!
+
+Best wishes,
+DjangoAIR team
+{% endautoescape %}

@@ -53,14 +53,19 @@ class Flight(models.Model):
     departure_time = models.DateTimeField()
     arrival_time = models.DateTimeField()
     distance = models.IntegerField()
+    pilots_reminder_is_sent = models.BooleanField(default=False)
     airplane = models.ForeignKey(Airplane, on_delete=models.CASCADE,
                                  related_name='flights')
-    departure_airport = models.ForeignKey(Airport,
-                                          on_delete=models.CASCADE,
-                                          related_name='departing_lights')
-    destination_airport = models.ForeignKey(Airport,
-                                            on_delete=models.CASCADE,
-                                            related_name='arriving_flights')
+    departure_airport = models.ForeignKey(
+        Airport,
+        on_delete=models.CASCADE,
+        related_name='departing_lights'
+    )
+    destination_airport = models.ForeignKey(
+        Airport,
+        on_delete=models.CASCADE,
+        related_name='arriving_flights'
+    )
 
     def __str__(self):
         return self.number

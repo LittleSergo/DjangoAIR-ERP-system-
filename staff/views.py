@@ -10,15 +10,16 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.core.mail import EmailMessage
-from django.template.loader import render_to_string
 from django.db import IntegrityError, transaction
-from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
 
 from common_instances.models import (
     Flight, Ticket, SeatType, Seat, Option, Discount, Airplane
+)
+from .tasks import (
+    send_pilot_assigning_letter, send_manager_assigning_letter,
+    send_password_reset_email, PASSWORD_RESET_TOKEN_GENERATOR
 )
 from .models import Pilot, User
 from .forms import (
@@ -28,9 +29,6 @@ from .forms import (
 from common_instances.forms import ResetPasswordForm
 
 
-PASSWORD_RESET_TOKEN_GENERATOR = PasswordResetTokenGenerator()
-
-
 @login_required
 def staff_flights(request):
     """Show all flights."""
@@ -38,18 +36,6 @@ def staff_flights(request):
     return render(request, 'staff/staff_flights.html', {
         'flights': flights
     })
-
-
-def send_pilot_assigning_letter(flight):
-    """Inform a pilot that he was assigned to a flight."""
-    subject = "You were assigned to a flight."
-    for pilot in flight.pilots.all():
-        message = render_to_string('staff/letters/assigning_pilots_to_flight.html', {
-            'pilot': pilot,
-            'flight': flight
-        })
-        mail = EmailMessage(subject, message, to=[pilot.email])
-        mail.send()
 
 
 @login_required
@@ -73,7 +59,7 @@ def create_flight(request):
                 seat=seat,
                 flight=flight
             )
-        send_pilot_assigning_letter(flight)
+        send_pilot_assigning_letter.delay(flight.id)
         messages.success(request, 'Flight was created successfully!')
         return redirect('staff:staff_flights')
     for error in json.loads(flight_form.errors.as_json()).values():
@@ -190,17 +176,6 @@ def staff_managers(request):
     })
 
 
-def send_manager_assigning_letter(manager, password: str):
-    """Sent email to manager whose was assigned."""
-    subject = "Welcome to Django AIR team"
-    message = render_to_string('staff/letters/manager_assigning_letter.html', {
-        'manager': manager,
-        'password': password
-    })
-    mail = EmailMessage(subject, message, to=[manager.email])
-    mail.send()
-
-
 @login_required
 def create_manager(request):
     """Create a manager."""
@@ -222,7 +197,7 @@ def create_manager(request):
             role=request.POST['role'],
             password=random_password
         )
-        send_manager_assigning_letter(manager, random_password)
+        send_manager_assigning_letter.delay(manager.id, random_password)
         return redirect('staff:staff_managers')
     except IntegrityError:
         return render(request, 'staff/create_manager.html', {
@@ -424,24 +399,6 @@ def logout_user(request):
         return redirect('staff:log_in')
 
 
-def send_password_reset_email(request, user):
-    """Send an email with instructions for password changing.
-    :param request:
-    :param user:
-    :return:
-    """
-    mail_subject = "Reset password."
-    message = render_to_string("staff/letters/reset_password_letter.html", {
-        'user': user,
-        'domain': get_current_site(request).domain,
-        'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-        'token': PASSWORD_RESET_TOKEN_GENERATOR.make_token(user),
-        'protocol': 'https' if request.is_secure() else 'http'
-    })
-    mail = EmailMessage(mail_subject, message, to=[user.email])
-    mail.send()
-
-
 @login_required
 def profile(request, user_id):
     """Show user profile."""
@@ -455,7 +412,8 @@ def profile(request, user_id):
         })
 
     if user.check_password(request.POST['password']):
-        send_password_reset_email(request, user)
+        domain = get_current_site(request).domain
+        send_password_reset_email(domain, request.is_secure(), user.id)
         messages.success(request, 'Email with instructions was sent on '
                                   'your email.')
         return render(request, 'staff/profile.html', {

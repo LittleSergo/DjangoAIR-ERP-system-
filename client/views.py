@@ -4,17 +4,14 @@ import datetime
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
-from django.contrib.sites.shortcuts import get_current_site
 from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.mail import EmailMessage
 from django.db import transaction
 from django.shortcuts import render, redirect
-from django.template.loader import render_to_string
-from django.utils.encoding import force_bytes, force_str
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_decode
 from django.urls import reverse
 
 from pytz import timezone
@@ -24,9 +21,10 @@ from common_instances.forms import ResetPasswordForm
 from .forms import SignupForm, CheckInFormSet, SearchForFlightsForm, build_formset_with_definite_forms
 from .models import User, Purchase
 from .payment_methods import paypal_payment
-from .pdf_templates import create_receipt_pdf, create_ticket_pdf
-
-PASSWORD_RESET_TOKEN_GENERATOR = PasswordResetTokenGenerator()
+from .tasks import (
+    PASSWORD_RESET_TOKEN_GENERATOR, send_password_reset_email,
+    send_email_with_receipt_and_ticket
+)
 
 
 def signup(request):
@@ -80,24 +78,6 @@ def logout_user(request):
         return redirect('client:login')
 
 
-def send_password_reset_email(request, user):
-    """Send an email with instructions for password changing.
-    :param request:
-    :param user:
-    :return:
-    """
-    mail_subject = "Reset password."
-    message = render_to_string("client/letters/reset_password_letter.html", {
-        'user': user,
-        'domain': get_current_site(request).domain,
-        'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-        'token': PASSWORD_RESET_TOKEN_GENERATOR.make_token(user),
-        'protocol': 'https' if request.is_secure() else 'http'
-    })
-    email = EmailMessage(mail_subject, message, to=[user.email])
-    email.send()
-
-
 def sort_purchases(purchases):
     """Sort purchases onto purchases with future and previous flights."""
     future_flights = []
@@ -128,7 +108,9 @@ def user_profile(request):
         })
 
     if request.user.check_password(request.POST['password']):
-        send_password_reset_email(request, request.user)
+        domain = get_current_site(request).domain
+        send_password_reset_email.delay(domain, request.is_secure(),
+                                        request.user.id)
         messages.success(request, 'Email with instructions was sent on '
                                   'your email.')
         return redirect('client:profile')
@@ -173,7 +155,6 @@ def online_checkin(request, purchase_id):
     """View for online check-in for passengers."""
     purchase = Purchase.objects.get(id=purchase_id)
     formset = CheckInFormSet(queryset=purchase.tickets.all())
-    print(purchase.tickets.all())
     if request.method == 'GET':
         return render(request, 'client/online_checkin.html', {
             'formset': formset
@@ -358,6 +339,7 @@ def execute_payment(request, purchase_id):
     """
     payment_id = request.GET.get('paymentId')
     payer_id = request.GET.get('PayerID')
+
     payment = paypalrestsdk.Payment.find(payment_id)
 
     if payment.execute({"payer_id": payer_id}):
@@ -370,22 +352,6 @@ def execute_payment(request, purchase_id):
     return redirect('client:payment_failed', purchase_id)
 
 
-# That function will be a celery task
-def send_email_with_receipt_and_ticket(purchase_id):
-    """Send email with receipt and ticket."""
-    purchase = Purchase.objects.get(id=purchase_id)
-    mail_subject = "DjangoAIR - your tickets."
-    message = render_to_string("client/letters/successful_purchase.html", {
-        'user': purchase.user,
-    })
-    mail = EmailMessage(mail_subject, message, to=[purchase.user.email])
-    mail.attach('receipt.pdf', create_receipt_pdf(purchase),
-                'application/pdf')
-    mail.attach('tickets.pdf', create_ticket_pdf(purchase),
-                'application/pdf')
-    mail.send()
-
-
 @login_required
 def payment_success(request, purchase_id):
     """Set purchase is paid to true and redirect to profile page with
@@ -394,14 +360,8 @@ def payment_success(request, purchase_id):
     :param purchase_id:
     :return:
     """
-    purchase = Purchase.objects.get(id=purchase_id)
-    purchase.is_paid = True
-    purchase.save()
-    send_email_with_receipt_and_ticket(purchase_id)
-    messages.success(
-        request, 'Payment succeed. We sent you your tickets and receipt '
-                 'on your email. Have a nice flight!'
-    )
+    send_email_with_receipt_and_ticket.delay(purchase_id)
+    messages.success(request, 'Payment succeed. Have a nice flight!')
     return redirect('client:profile')
 
 
