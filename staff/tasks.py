@@ -88,6 +88,6 @@ def flight_pilot_reminder():
     )
     for flight in flights:
         for pilot in flight.pilots:
-            send_flight_reminder_to_pilot.delay(pilot.id)
+            send_flight_reminder_to_pilot.delay(pilot.id, flight.id)
         flight.pilots_reminder_is_sent = True
         flight.save()
