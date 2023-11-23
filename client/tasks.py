@@ -49,7 +49,7 @@ def send_password_reset_email(domain, request_is_secure: bool, user_id):
         'token': PASSWORD_RESET_TOKEN_GENERATOR.make_token(user),
         'protocol': 'https' if request_is_secure else 'http'
     })
-    email = EmailMessage(mail_subject, message, to=[user_id.email])
+    email = EmailMessage(mail_subject, message, to=[user.email])
     email.send()
 
 

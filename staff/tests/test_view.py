@@ -1,15 +1,19 @@
 import re
 from datetime import datetime, timedelta
+from unittest.mock import patch
 
-from django.core import mail
 from pytz import timezone
 
+from django.core import mail
 from django.db import transaction
 from django.test import TestCase
 from django.urls import reverse
 
-from common_instances.models import Flight, Airport, Airplane, SeatType, Option, Discount, Ticket, Seat
+from common_instances.models import (
+    Flight, Airport, Airplane, SeatType, Option, Discount, Ticket, Seat
+)
 from staff.models import User, Pilot
+from staff.tasks import send_manager_assigning_letter, send_pilot_assigning_letter
 
 
 class TestViews(TestCase):
@@ -94,6 +98,8 @@ class TestViews(TestCase):
         self.assertTemplateUsed(response, 'staff/create_flight.html')
         self.assertContains(response, 'Create flight')
 
+    @patch('staff.tasks.send_pilot_assigning_letter.delay',
+           send_pilot_assigning_letter)
     def test_create_flight_view_POST(self):
         """Post to create flight view and check data."""
         pilot = Pilot.objects.create(
@@ -201,6 +207,8 @@ class TestViews(TestCase):
         self.assertTemplateUsed(response, 'staff/create_manager.html')
         self.assertContains(response, 'Create manager')
 
+    @patch('staff.tasks.send_manager_assigning_letter.delay',
+           send_manager_assigning_letter)
     def test_create_manager_view_POST(self):
         """Post to create manager view and check data."""
         self.client.login(username='supervisor', password='supervisor')

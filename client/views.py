@@ -18,7 +18,10 @@ from pytz import timezone
 
 from common_instances.models import Flight, Passenger, Discount
 from common_instances.forms import ResetPasswordForm
-from .forms import SignupForm, CheckInFormSet, SearchForFlightsForm, build_formset_with_definite_forms
+from .forms import (
+    SignupForm, CheckInFormSet, SearchForFlightsForm,
+    build_formset_with_definite_forms
+)
 from .models import User, Purchase
 from .payment_methods import paypal_payment
 from .tasks import (
@@ -39,7 +42,7 @@ def signup(request):
         user.set_password(request.POST['password'])
         user.save()
         messages.success(request, 'Your account wes successfully created!')
-        return redirect('client:signup')
+        return redirect('client:login')
     return render(request, 'client/signup.html', {
         'form': form
     })
@@ -57,13 +60,13 @@ def login_view(request):
 
     if user is None:
         messages.error(request, 'Username and password did not match.')
-        return render(request, 'staff/login.html', {
+        return render(request, 'client/login.html', {
             'form': AuthenticationForm(request.POST)
         })
 
     messages.success(request, f"Successfully logged in as {user.username}.")
     login(request, user)
-    return redirect('client:login')
+    return redirect('client:home')
 
 
 @login_required
@@ -138,10 +141,11 @@ def change_password(request, uidb64, token):
             })
         if ResetPasswordForm(request.POST).is_valid():
             user.set_password(request.POST['password'])
+            user.save()
             messages.success(request, 'Password was changed successfully.')
             return redirect('client:profile')
 
-        return render(request, 'staff/reset_password.html', {
+        return render(request, 'client/reset_password.html', {
             'form': ResetPasswordForm(request.POST)
         })
     messages.info(request, 'That user does not exist or token is not '
@@ -293,7 +297,6 @@ def buy_tickets(request, flight_id):
                 })
             ticket_appropriation(form, ticket, purchase)
         purchase.save()
-        messages.success(request, 'Success')
         return redirect('client:checkout', purchase.id)
     return render(request, 'client/buy_tickets.html', {
         'formset': formset,

@@ -1,4 +1,5 @@
 from datetime import datetime
+from pytz import timezone
 
 import faker
 
@@ -161,9 +162,12 @@ def create_fake_flight():
     flight = Flight(
         number=fake_airplane_number(),
         ticket_price=50,
-        boarding_time=datetime(2023, 9, 20, 15, 15),
-        departure_time=datetime(2023, 9, 20, 16, 15),
-        arrival_time=datetime(2023, 9, 20, 17, 5),
+        boarding_time=datetime(2023, 9, 20, 15, 15,
+                               tzinfo=timezone('EET')),
+        departure_time=datetime(2023, 9, 20, 16, 15,
+                                tzinfo=timezone('EET')),
+        arrival_time=datetime(2023, 9, 20, 17, 5,
+                              tzinfo=timezone('EET')),
         distance=80,
         airplane=airplanes[0],
         departure_airport=Airport.objects.get(name='Borispil'),

@@ -18,7 +18,7 @@ PASSWORD_RESET_TOKEN_GENERATOR = PasswordResetTokenGenerator()
 @app.task
 def send_manager_assigning_letter(manager_id, password: str):
     """Sent email to manager whose was assigned."""
-    manager = User.objects.get(manager_id)
+    manager = User.objects.get(id=manager_id)
     subject = "Welcome to Django AIR team"
     message = render_to_string('staff/letters/manager_assigning_letter.html', {
         'manager': manager,
@@ -52,14 +52,14 @@ def send_password_reset_email(domain, request_is_secure: bool, user_id):
     """
     user = User.objects.get(id=user_id)
     mail_subject = "Reset password."
-    message = render_to_string("client/letters/reset_password_letter.html", {
+    message = render_to_string("staff/letters/reset_password_letter.html", {
         'user': user,
         'domain': domain,
         'uid': urlsafe_base64_encode(force_bytes(user_id)),
         'token': PASSWORD_RESET_TOKEN_GENERATOR.make_token(user),
         'protocol': 'https' if request_is_secure else 'http'
     })
-    email = EmailMessage(mail_subject, message, to=[user_id.email])
+    email = EmailMessage(mail_subject, message, to=[user.email])
     email.send()
 
 
@@ -69,7 +69,7 @@ def send_flight_reminder_to_pilot(pilot_id, flight_id):
     pilot = Pilot.objects.get(id=pilot_id)
     flight = Flight.objects.get(id=flight_id)
     mail_subject = "DjangoAIR - flight reminder."
-    message = render_to_string("client/letters/flight_reminder.html", {
+    message = render_to_string("staff/letters/flight_reminder.html", {
         'pilot': pilot,
         'flight': flight
     })
@@ -87,7 +87,7 @@ def flight_pilot_reminder():
                              + timedelta(hours=6))
     )
     for flight in flights:
-        for pilot in flight.pilots:
+        for pilot in flight.pilots.all():
             send_flight_reminder_to_pilot.delay(pilot.id, flight.id)
         flight.pilots_reminder_is_sent = True
         flight.save()

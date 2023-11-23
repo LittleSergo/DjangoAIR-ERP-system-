@@ -43,4 +43,4 @@ def paypal_payment(request, purchase_id):
         return redirect(payment.links[1].href)  # Redirect to PayPal for payment
     messages.error(request, f'Purchase failed. Try again.\n'
                             f'{payment.error}')
-    return redirect('client:payment_failed')
+    return redirect('client:payment_failed', purchase_id)

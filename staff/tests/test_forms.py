@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from pytz import timezone
 
 from django.test import TestCase
 
@@ -40,9 +41,11 @@ class TestForms(TestCase):
         form = CreateFlight(data={
             'number': 'test1234',
             'ticket_price': 50,
-            'boarding_time': datetime.now(),
-            'departure_time': datetime.now() + timedelta(hours=1),
-            'arrival_time': datetime.now() + timedelta(hours=2),
+            'boarding_time': datetime.now(tz=timezone('EET')),
+            'departure_time': (datetime.now(tz=timezone('EET')) +
+                               timedelta(hours=1)),
+            'arrival_time': (datetime.now(tz=timezone('EET')) +
+                             timedelta(hours=2)),
             'distance': 200,
             'airplane': airplane,
             'pilots': pilots,
