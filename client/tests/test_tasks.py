@@ -17,27 +17,13 @@ from client.tasks import (
 
 class TestTasks(TestCase):
     """Tests for tasks."""
+
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser',
-                                             password='testpassword',
-                                             email='test@gmail.com',
-                                             email_is_verified=True)
-        self.purchase = Purchase.objects.create(
-            user=self.user
-        )
-        plane = Airplane.objects.create(
-            number='testplane'
-        )
-        airports = [('Borispil', 'KBP'), ('Zhuliany', 'IEV')]
-        airports = [
-            Airport.objects.create(
-                name=airport[0],
-                city='Kyiv',
-                country='Ukraine',
-                IATA_code=airport[1]
-            ) for airport in airports
-        ]
-        self.flight = Flight.objects.create(
+        self.user = dict(username='testuser', password='testpassword',
+                         email='test@gmail.com', email_is_verified=True)
+        self.plane = dict(number='testplane')
+        self.airports = [('Borispil', 'KBP'), ('Zhuliany', 'IEV')]
+        self.flight = dict(
             number='testflight',
             ticket_price=50,
             boarding_time=datetime.now(tz=timezone('EET')),
@@ -45,29 +31,41 @@ class TestTasks(TestCase):
                 tz=timezone('EET')) + timedelta(hours=2),
             arrival_time=datetime.now(tz=timezone('EET')),
             distance=200,
+        )
+        self.discount = dict(
+            name='test_discount', amount=10, promo_code='test_promo'
+        )
+        self.seat_type = dict(seat_type='Economy', price_multiplier=1)
+        self.seat = dict(number='11')
+        self.ticket = dict(ticket_code='testticket')
+        self.fill_db()
+
+    def fill_db(self):
+        self.user = User.objects.create_user(**self.user)
+        self.purchase = Purchase.objects.create(user=self.user)
+        plane = Airplane.objects.create(
+            number='testplane'
+        )
+        airports = [
+            Airport.objects.create(
+                name=airport[0],
+                city='Kyiv',
+                country='Ukraine',
+                IATA_code=airport[1]
+            ) for airport in self.airports
+        ]
+        self.flight = Flight.objects.create(
             airplane=plane,
             departure_airport=airports[0],
-            destination_airport=airports[1]
+            destination_airport=airports[1],
+            **self.flight
         )
-        Discount.objects.create(
-            name='test_discount',
-            amount=10,
-            promo_code='test_promo'
-        )
-        seat_type = SeatType.objects.create(
-            seat_type='Economy',
-            price_multiplier=1
-        )
-        seat = Seat.objects.create(
-            number='11',
-            airplane=plane,
-            seat_type=seat_type
-        )
-        ticket = Ticket.objects.create(
-            ticket_code='testticket',
-            seat=seat,
-            flight=self.flight
-        )
+        Discount.objects.create(**self.discount)
+        seat_type = SeatType.objects.create(**self.seat_type)
+        seat = Seat.objects.create(airplane=plane, seat_type=seat_type,
+                                   **self.seat)
+        ticket = Ticket.objects.create(seat=seat, flight=self.flight,
+                                       **self.ticket)
         self.purchase.tickets.add(ticket)
         self.purchase.save()
 

@@ -77,22 +77,29 @@ class TestLoginLogoutViews(TestCase):
     """Test login view."""
 
     def setUp(self):
-        site = Site.objects.get(
+        self.site = Site.objects.get(
             domain='example.com',
         )
-        site.domain = '127.0.0.1:8000'
-        site.name = '127.0.0.1:8000'
-        site.save()
-        social_app = SocialApp.objects.create(
-            provider='google',
-            name='test',
-            client_id='test_id',
-            secret='test_key'
-        )
-        social_app.sites.add(site)
+        self.site.domain = '127.0.0.1:8000'
+        self.site.name = '127.0.0.1:8000'
+        self.site.save()
+        self.social_app = {
+            "provider": 'google',
+            "name": 'test',
+            'client_id': 'test_id',
+            'secret': 'test_key'
+        }
+        self.user = {
+            'username': 'testuser',
+            'password': 'testpassword'
+        }
+        self.fill_db()
+
+    def fill_db(self):
+        social_app = SocialApp.objects.create(**self.social_app)
+        social_app.sites.add(self.site)
         social_app.save()
-        User.objects.create_user(username='testuser',
-                                 password='testpassword')
+        User.objects.create_user(**self.user)
 
     def test_get_login_view(self):
         """Test get method to a login view."""
@@ -134,10 +141,16 @@ class TestUserProfileView(TestCase):
     """Test user profile view."""
 
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser',
-                                             password='testpassword',
-                                             email='test@gmail.com')
+        self.user = dict(
+            username='testuser',
+            password='testpassword',
+            email='test@gmail.com'
+        )
+        self.fill_db()
         self.client.login(username='testuser', password='testpassword')
+
+    def fill_db(self):
+        self.user = User.objects.create_user(**self.user)
 
     def test_get_user_profile_view(self):
         """Try to get user profile view."""
@@ -165,9 +178,10 @@ class TestChangePasswordView(TestCase):
     @patch('client.tasks.send_password_reset_email.delay',
            send_password_reset_email)
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser',
-                                             password='testpassword',
-                                             email='test@gmail.com')
+        self.user = dict(username='testuser',
+                         password='testpassword',
+                         email='test@gmail.com')
+        self.fill_db()
         self.client.login(username='testuser', password='testpassword')
         self.client.post(reverse('client:profile'), data={
             'password': 'testpassword'
@@ -176,6 +190,9 @@ class TestChangePasswordView(TestCase):
             "(?P<url>https?://[^\s]+)",
             mail.outbox[0].body
         ).group('url')
+
+    def fill_db(self):
+        self.user = User.objects.create_user(**self.user)
 
     def test_get_change_password_view(self):
         """Try to get change password view."""
@@ -210,32 +227,14 @@ class TestOnlineCheckIn(TestCase):
     """Test online check-in view."""
 
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser',
-                                             password='testpassword',
-                                             email='test@gmail.com')
-        self.client.login(username='testuser', password='testpassword')
-        plane = Airplane.objects.create(
-            number='testplane'
-        )
-        seat_type = SeatType.objects.create(
-            seat_type='Economy',
-            price_multiplier=1
-        )
-        seat = Seat.objects.create(
-            number='11',
-            airplane=plane,
-            seat_type=seat_type
-        )
-        airports = [('Borispil', 'KBP'), ('Zhuliany', 'IEV')]
-        airports = [
-            Airport.objects.create(
-                name=airport[0],
-                city='Kyiv',
-                country='Ukraine',
-                IATA_code=airport[1]
-            ) for airport in airports
-        ]
-        flight = Flight.objects.create(
+        self.user = dict(username='testuser',
+                         password='testpassword',
+                         email='test@gmail.com')
+        self.plane = dict(number='testplane')
+        self.seat_type = dict(seat_type='Economy', price_multiplier=1)
+        self.seat = dict(number='11', )
+        self.airports = [('Borispil', 'KBP'), ('Zhuliany', 'IEV')]
+        self.flight = dict(
             number='testflight',
             ticket_price=50,
             boarding_time=datetime(
@@ -248,18 +247,42 @@ class TestOnlineCheckIn(TestCase):
                 2024, 2, 2, 13, tzinfo=timezone('EET')
             ),
             distance=200,
+        )
+        self.ticket = dict(ticket_code='testticket', )
+        self.fill_db()
+        self.client.login(username='testuser', password='testpassword')
+
+    def fill_db(self):
+        self.user = User.objects.create_user(username='testuser',
+                                             password='testpassword',
+                                             email='test@gmail.com')
+        plane = Airplane.objects.create(**self.plane)
+        seat_type = SeatType.objects.create(**self.seat_type)
+        seat = Seat.objects.create(
             airplane=plane,
-            departure_airport=airports[0],
-            destination_airport=airports[1]
+            seat_type=seat_type,
+            **self.seat
+        )
+        self.airports = [
+            Airport.objects.create(
+                name=airport[0],
+                city='Kyiv',
+                country='Ukraine',
+                IATA_code=airport[1]
+            ) for airport in self.airports
+        ]
+        flight = Flight.objects.create(
+            airplane=plane,
+            departure_airport=self.airports[0],
+            destination_airport=self.airports[1],
+            **self.flight
         )
         self.ticket = Ticket.objects.create(
             ticket_code='testticket',
             seat=seat,
             flight=flight
         )
-        self.purchase = Purchase.objects.create(
-            user=self.user
-        )
+        self.purchase = Purchase.objects.create(user=self.user)
         self.purchase.tickets.add(self.ticket)
         self.purchase.save()
 
@@ -285,19 +308,12 @@ class TestHomeAndFlightSearchViews(TestCase):
     """Test home and flight search views."""
 
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser',
-                                             password='testpassword',
-                                             email='test@gmail.com')
+        self.user = dict(username='testuser',
+                         password='testpassword',
+                         email='test@gmail.com')
+        self.airports = [('Borispil', 'KBP'), ('Zhuliany', 'IEV')]
+        self.fill_db()
         self.client.login(username='testuser', password='testpassword')
-        airports = [('Borispil', 'KBP'), ('Zhuliany', 'IEV')]
-        self.airports = [
-            Airport.objects.create(
-                name=airport[0],
-                city='Kyiv',
-                country='Ukraine',
-                IATA_code=airport[1]
-            ) for airport in airports
-        ]
         self.flight_search_link = reverse('client:flights_search') + (
             f"?from={self.airports[0].id}"
             f"&to={self.airports[1].id}"
@@ -306,6 +322,17 @@ class TestHomeAndFlightSearchViews(TestCase):
             f"&year=2024"
             f"&passengers=1"
         )
+
+    def fill_db(self):
+        self.user = User.objects.create_user(**self.user)
+        self.airports = [
+            Airport.objects.create(
+                name=airport[0],
+                city='Kyiv',
+                country='Ukraine',
+                IATA_code=airport[1]
+            ) for airport in self.airports
+        ]
 
     def test_get_home_view(self):
         """Try to get home page."""
@@ -359,24 +386,11 @@ class TestBuyTicketsAndCheckoutViews(TestCase):
     """Test buy tickets and checkout views."""
 
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser',
-                                             password='testpassword',
-                                             email='test@gmail.com',
-                                             email_is_verified=True)
-        self.client.login(username='testuser', password='testpassword')
-        self.plane = Airplane.objects.create(
-            number='testplane'
-        )
-        airports = [('Borispil', 'KBP'), ('Zhuliany', 'IEV')]
-        airports = [
-            Airport.objects.create(
-                name=airport[0],
-                city='Kyiv',
-                country='Ukraine',
-                IATA_code=airport[1]
-            ) for airport in airports
-        ]
-        self.flight = Flight.objects.create(
+        self.user = dict(username='testuser', password='testpassword',
+                         email='test@gmail.com', email_is_verified=True)
+        self.plane = dict(number='testplane')
+        self.airports = [('Borispil', 'KBP'), ('Zhuliany', 'IEV')]
+        self.flight = dict(
             number='testflight',
             ticket_price=50,
             boarding_time=datetime(
@@ -389,28 +403,46 @@ class TestBuyTicketsAndCheckoutViews(TestCase):
                 2024, 2, 2, 13, tzinfo=timezone('EET')
             ),
             distance=200,
+        )
+        self.discount = dict(
+            name='test_discount', amount=10, promo_code='test_promo'
+        )
+        self.seat_type = dict(seat_type='Economy', price_multiplier=1)
+        self.seat = dict(number='11')
+        self.ticket = dict(ticket_code='testticket')
+        self.fill_db()
+        self.client.login(username='testuser', password='testpassword')
+
+    def fill_db(self):
+        self.user = User.objects.create_user(**self.user)
+        self.plane = Airplane.objects.create(
+            number='testplane'
+        )
+        self.airports = [
+            Airport.objects.create(
+                name=airport[0],
+                city='Kyiv',
+                country='Ukraine',
+                IATA_code=airport[1]
+            ) for airport in self.airports
+        ]
+        self.flight = Flight.objects.create(
             airplane=self.plane,
-            departure_airport=airports[0],
-            destination_airport=airports[1]
+            departure_airport=self.airports[0],
+            destination_airport=self.airports[1],
+            **self.flight
         )
-        Discount.objects.create(
-            name='test_discount',
-            amount=10,
-            promo_code='test_promo'
-        )
-        self.seat_type = SeatType.objects.create(
-            seat_type='Economy',
-            price_multiplier=1
-        )
+        Discount.objects.create(**self.discount)
+        self.seat_type = SeatType.objects.create(**self.seat_type)
         seat = Seat.objects.create(
-            number='11',
             airplane=self.plane,
-            seat_type=self.seat_type
+            seat_type=self.seat_type,
+            **self.seat
         )
         self.ticket = Ticket.objects.create(
-            ticket_code='testticket',
             seat=seat,
-            flight=self.flight
+            flight=self.flight,
+            **self.ticket
         )
 
     def test_get_buy_tickets_view(self):
@@ -462,28 +494,13 @@ class TestBuyTicketsAndCheckoutViews(TestCase):
 
 class TestPaymentViews(TestCase):
     """Test payment views."""
+
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser',
-                                             password='testpassword',
-                                             email='test@gmail.com',
-                                             email_is_verified=True)
-        self.client.login(username='testuser', password='testpassword')
-        self.purchase = Purchase.objects.create(
-            user=self.user
-        )
-        self.plane = Airplane.objects.create(
-            number='testplane'
-        )
-        airports = [('Borispil', 'KBP'), ('Zhuliany', 'IEV')]
-        airports = [
-            Airport.objects.create(
-                name=airport[0],
-                city='Kyiv',
-                country='Ukraine',
-                IATA_code=airport[1]
-            ) for airport in airports
-        ]
-        self.flight = Flight.objects.create(
+        self.user = dict(username='testuser', password='testpassword',
+                         email='test@gmail.com', email_is_verified=True)
+        self.plane = dict(number='testplane')
+        self.airports = [('Borispil', 'KBP'), ('Zhuliany', 'IEV')]
+        self.flight = dict(
             number='testflight',
             ticket_price=50,
             boarding_time=datetime(
@@ -496,30 +513,46 @@ class TestPaymentViews(TestCase):
                 2024, 2, 2, 13, tzinfo=timezone('EET')
             ),
             distance=200,
+        )
+        self.discount = dict(
+            name='test_discount', amount=10, promo_code='test_promo'
+        )
+        self.seat_type = dict(seat_type='Economy', price_multiplier=1)
+        self.seat = dict(number='11')
+        self.ticket = dict(ticket_code='testticket')
+        self.fill_db()
+        self.client.login(username='testuser', password='testpassword')
+
+    def fill_db(self):
+        self.user = User.objects.create_user(**self.user)
+        self.purchase = Purchase.objects.create(
+            user=self.user
+        )
+        self.plane = Airplane.objects.create(**self.plane)
+        airports = [
+            Airport.objects.create(
+                name=airport[0],
+                city='Kyiv',
+                country='Ukraine',
+                IATA_code=airport[1]
+            ) for airport in self.airports
+        ]
+        self.flight = Flight.objects.create(
             airplane=self.plane,
             departure_airport=airports[0],
-            destination_airport=airports[1]
+            destination_airport=airports[1],
+            **self.flight
         )
-        Discount.objects.create(
-            name='test_discount',
-            amount=10,
-            promo_code='test_promo'
-        )
-        self.seat_type = SeatType.objects.create(
-            seat_type='Economy',
-            price_multiplier=1
-        )
+        Discount.objects.create(**self.discount)
+        self.seat_type = SeatType.objects.create(**self.seat_type)
         seat = Seat.objects.create(
-            number='11',
-            airplane=self.plane,
-            seat_type=self.seat_type
+            airplane=self.plane, seat_type=self.seat_type, **self.seat
         )
         self.ticket = Ticket.objects.create(
-            ticket_code='testticket',
-            seat=seat,
-            flight=self.flight
+            seat=seat, flight=self.flight, **self.ticket
         )
         self.purchase.tickets.add(self.ticket)
+        self.purchase.save()
 
     def test_create_payment_view(self):
         """Try to get create payment view."""

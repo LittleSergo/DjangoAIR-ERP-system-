@@ -2,7 +2,7 @@ import logging
 import paypalrestsdk
 import datetime
 
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
@@ -22,12 +22,14 @@ from .forms import (
     SignupForm, CheckInFormSet, SearchForFlightsForm,
     build_formset_with_definite_forms
 )
-from .models import User, Purchase
+from .models import Purchase
 from .payment_methods import paypal_payment
 from .tasks import (
     PASSWORD_RESET_TOKEN_GENERATOR, send_password_reset_email,
     send_email_with_receipt_and_ticket
 )
+
+User = get_user_model()
 
 
 def signup(request):

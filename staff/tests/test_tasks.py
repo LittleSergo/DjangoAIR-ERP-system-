@@ -18,29 +18,15 @@ from staff.tasks import (
 class TestTasks(TestCase):
     """Tests for tasks."""
     def setUp(self):
-        self.user = User.objects.create_user(username='testuser',
-                                             password='testpassword',
-                                             email='test@gmail.com',
-                                             email_is_verified=True)
-        airports = [('Borispil', 'KBP'), ('Zhuliany', 'IEV')]
-        airports = [
-            Airport.objects.create(
-                name=airport[0],
-                city='Kyiv',
-                country='Ukraine',
-                IATA_code=airport[1]
-            ) for airport in airports
-        ]
-        plane = Airplane.objects.create(
-            number='testplane'
+        self.user = dict(username='testuser', password='testpassword',
+                         email='test@gmail.com', email_is_verified=True)
+        self.airports = [('Borispil', 'KBP'), ('Zhuliany', 'IEV')]
+        self.plane = dict(number='testplane')
+        self.pilot = dict(
+            first_name='Tom', last_name='Cruise',
+            category='ATP', email='tomcruise@gmail.com'
         )
-        self.pilot = Pilot.objects.create(
-            first_name='Tom',
-            last_name='Cruise',
-            category='ATP',
-            email='tomcruise@gmail.com'
-        )
-        self.flight = Flight.objects.create(
+        self.flight = dict(
             number='testflight',
             ticket_price=50,
             boarding_time=datetime.now(tz=timezone('EET')),
@@ -48,9 +34,26 @@ class TestTasks(TestCase):
                 tz=timezone('EET')) + timedelta(hours=2),
             arrival_time=datetime.now(tz=timezone('EET')),
             distance=200,
+        )
+        self.fill_db()
+
+    def fill_db(self):
+        self.user = User.objects.create_user(**self.user)
+        airports = [
+            Airport.objects.create(
+                name=airport[0],
+                city='Kyiv',
+                country='Ukraine',
+                IATA_code=airport[1]
+            ) for airport in self.airports
+        ]
+        plane = Airplane.objects.create(**self.plane)
+        self.pilot = Pilot.objects.create(**self.pilot)
+        self.flight = Flight.objects.create(
             airplane=plane,
             departure_airport=airports[0],
-            destination_airport=airports[1]
+            destination_airport=airports[1],
+            **self.flight
         )
         self.flight.pilots.add(self.pilot)
         self.flight.save()
