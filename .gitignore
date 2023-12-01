@@ -7,3 +7,7 @@ migrations/
 *.db
 /node_modules
 .env
+*.bak
+*.dat
+*.dir
+celerybeat-schedule
