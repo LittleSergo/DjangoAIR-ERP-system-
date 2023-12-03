@@ -1,8 +1,8 @@
 from .base import *
 
-DEBUG = env.str('DEBUG') in ['1', 'true']
+DEBUG = True
 
-ALLOWED_HOSTS = [env.str('ALLOWED_HOSTS')]
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
 
 DATABASES = {
     "default": {
