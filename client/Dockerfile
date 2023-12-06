@@ -21,26 +21,4 @@ RUN apt-get update \
 COPY ./client/requirements.txt /requirements.txt
 RUN pip install -r /requirements.txt
 
-COPY ./client/compose/entrypoint /entrypoint
-RUN sed -i 's/\r$//g' /entrypoint
-RUN chmod +x /entrypoint
-
-COPY ./client/compose/start /start
-RUN sed -i 's/\r$//g' /start
-RUN chmod +x /start
-
-COPY ./client/compose/celery/worker/start /start-celeryworker
-RUN sed -i 's/\r$//g' /start-celeryworker
-RUN chmod +x /start-celeryworker
-
-COPY ./client/compose/celery/beat/start /start-celerybeat
-RUN sed -i 's/\r$//g' /start-celerybeat
-RUN chmod +x /start-celerybeat
-
-COPY ./client/compose/celery/flower/start /start-flower
-RUN sed -i 's/\r$//g' /start-flower
-RUN chmod +x /start-flower
-
 WORKDIR /apps/client
-
-ENTRYPOINT ["/entrypoint"]
