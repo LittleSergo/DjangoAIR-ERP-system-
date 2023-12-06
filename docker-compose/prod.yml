@@ -26,7 +26,7 @@ services:
       - 8000
     # env_file is used to manage the env variables of the project
     env_file:
-      - ../.env/.dev
+      - ../.env/.prod
     depends_on:
       db:
         condition: service_healthy
@@ -59,7 +59,7 @@ services:
     volumes:
       - ../staff:/apps/staff
     env_file:
-      - ../.env/.dev
+      - ../.env/.prod
     depends_on:
       - staff
 
@@ -83,7 +83,7 @@ services:
     volumes:
       - ../staff:/apps/staff
     env_file:
-      - ../.env/.dev
+      - ../.env/.prod
     expose:
       - 5555
     depends_on:
@@ -104,7 +104,7 @@ services:
       - 8001
     # env_file is used to manage the env variables of the project
     env_file:
-      - ../.env/.dev
+      - ../.env/.prod
     depends_on:
       db:
         condition: service_healthy
@@ -119,7 +119,7 @@ services:
     volumes:
       - ../client:/apps/client
     env_file:
-      - ../.env/.dev
+      - ../.env/.prod
     depends_on:
       - client
 
@@ -131,7 +131,7 @@ services:
     volumes:
       - ../client:/apps/client
     env_file:
-      - ../.env/.dev
+      - ../.env/.prod
     depends_on:
       - client
 
@@ -143,7 +143,7 @@ services:
     volumes:
       - ../client:/apps/client
     env_file:
-      - ../.env/.dev
+      - ../.env/.prod
     expose:
       - 5556
     depends_on:
