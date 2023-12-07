@@ -10,12 +10,10 @@ RUN apt-get update \
   && apt-get install -y libpq-dev \
   # Translations dependencies
   && apt-get install -y gettext \
+  && apt-get -y install git \
   # cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
-
-RUN apt-get update \
-  && apt-get -y install git
 
 # Requirements are installed here to ensure they will be cached.
 COPY ./client/requirements.txt /requirements.txt

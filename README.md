@@ -18,4 +18,27 @@
 8. Емейл верифікація.
 9. Додати celery email нагадування про найближчі рейси для пасажирів та пілотів, 
 звільнення місць після завершення рейсу.
-10. Додати API. 
+10. Додати API:
+  - Написати модель User і дати їй назву client_user для едентичності 
+користувачів:
+```python
+class User(AbstractUser):
+    """User model for client side."""
+    ROLES = [
+        ('customer', 'Customer')
+    ]
+    role = models.CharField(choices=ROLES, default='customer',
+                            max_length=30)
+    email_is_verified = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'client_user'
+```
+  - views:
+    - view для реєстрації користувачів
+    - view для доступних польотів з параметрами звідки, куди та дата
+    - view для відображення доступних квитків конкретних 
+польотів (методи: list, retrieve)
+    - view для моделі Plane (методи: list, retrieve)
+    - view для моделі Airport (методи: list, retrieve)
+    - view для моделі Option (методи: list, retrieve)
