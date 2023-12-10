@@ -11,6 +11,7 @@ services:
       - static_volume:/apps/static
     depends_on:
       - staff
+      - client
 
   staff:
     build:
@@ -32,6 +33,20 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  redis_staff_cache-master:
+    container_name: redis_staff_cache-master
+    image: redis:7-alpine
+    command: --port 6381
+    expose:
+      - 6381
+
+  redis_staff_cache-slave:
+    container_name: redis_staff_cache-slave
+    image: redis:7-alpine
+    command: --port 6383 --slaveof redis_staff_cache-master 6381
+    expose:
+      - 6383
 
   db:
     image: postgres:14-alpine
@@ -111,6 +126,20 @@ services:
       redis:
         condition: service_healthy
 
+  redis_client_cache-master:
+    container_name: redis_client_cache-master
+    image: redis:7-alpine
+    command: --port 6380
+    expose:
+      - 6380
+
+  redis_client_cache-slave:
+    container_name: redis_client_cache-slave
+    image: redis:7-alpine
+    command: --port 6384 --slaveof redis_client_cache-master 6380
+    expose:
+      - 6384
+
   client_celery_worker:
     build:
       context: ../
@@ -149,6 +178,40 @@ services:
     depends_on:
       - client
 
+  client_api:
+    container_name: client_api
+    build:
+      context: ../
+      dockerfile: client_api/Dockerfile
+    command: gunicorn django_air.wsgi --bind 0.0.0.0:8002 --workers 4 --threads 4
+    volumes:
+      - ../client_api:/apps/client_api
+      - static_volume:/apps/client_api/static
+    expose:
+      - 8002
+    # env_file is used to manage the env variables of the project
+    env_file:
+      - ../.env/.dev
+    depends_on:
+      db:
+        condition: service_healthy
+
+  redis_client_api_cache-master:
+    container_name: redis_client_api_cache-master
+    image: redis:7-alpine
+    command: --port 6382
+    expose:
+      - 6382
+
+  redis_client_api_cache-slave:
+    container_name: redis_client_api_cache-slave
+    image: redis:7-alpine
+    command: --port 6385 --slaveof redis_client_api_cache-master 6382
+    expose:
+      - 6385
+
 volumes:
   postgres_data: {}
   static_volume: {}
+  redis_master:
+  redis_slave:

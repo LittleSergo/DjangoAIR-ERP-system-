@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   staff:
+    container_name: staff
     build:
       context: ../
       dockerfile: staff/Dockerfile
@@ -19,6 +20,13 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  redis_staff_cache:
+    container_name: redis_staff_cache
+    image: redis:7-alpine
+    command: --port 6381
+    ports:
+      - "6381:6381"
 
   db:
     image: postgres:14-alpine
@@ -77,6 +85,7 @@ services:
       - staff
 
   client:
+    container_name: client
     build:
       context: ../
       dockerfile: client/Dockerfile
@@ -94,6 +103,13 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+
+  redis_client_cache:
+    container_name: redis_client_cache
+    image: redis:7-alpine
+    command: --port 6380
+    ports:
+      - "6380:6380"
 
   client_celery_worker:
     build:
@@ -132,6 +148,31 @@ services:
       - 5556:5556
     depends_on:
       - client
+
+  client_api:
+    container_name: client_api
+    build:
+      context: ../
+      dockerfile: client_api/Dockerfile
+    command: gunicorn django_air.wsgi --bind 0.0.0.0:8002 --workers 4 --threads 4
+    volumes:
+      - ../client_api:/apps/client_api
+      - static_volume:/apps/client_api/static
+    ports:
+      - 8002:8002
+    # env_file is used to manage the env variables of the project
+    env_file:
+      - ../.env/.dev
+    depends_on:
+      db:
+        condition: service_healthy
+
+  redis_client_api_cache:
+    container_name: redis_client_api_cache
+    image: redis:7-alpine
+    command: --port 6382
+    ports:
+      - "6382:6382"
 
 volumes:
   postgres_data: {}

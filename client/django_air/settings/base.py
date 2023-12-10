@@ -29,6 +29,12 @@ SECRET_KEY = env.str('SECRET_KEY')
 
 # Application definition
 
+INTERNAL_IPS = [
+    "0.0.0.0",
+    "127.0.0.1",
+    'localhost'
+]
+
 INSTALLED_APPS = [
     # django apps
     'django.contrib.admin',
@@ -111,6 +117,20 @@ TIME_ZONE = 'EET'
 USE_I18N = True
 
 USE_TZ = True
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": env.list('REDIS_CLIENT_CACHE'),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+        "KEY_PREFIX": "client",
+    }
+}
+
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/

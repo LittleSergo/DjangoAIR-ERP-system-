@@ -1,5 +1,5 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.db import models
 
 
 class User(AbstractUser):
@@ -10,6 +10,9 @@ class User(AbstractUser):
     role = models.CharField(choices=ROLES, default='customer',
                             max_length=30)
     email_is_verified = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'client_user'
 
     def __str__(self):
         return self.username
@@ -25,6 +28,9 @@ class Purchase(models.Model):
     tickets = models.ManyToManyField('common_instances.Ticket',
                                      related_name='purchase')
     reminder_is_sent = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'client_purchase'
 
     def total_bill(self):
         """Return the price for all tickets."""
