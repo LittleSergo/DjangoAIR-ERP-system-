@@ -1,0 +1,13 @@
+.pytest_cache/
+__pycache__/
+.idea/
+dist/
+migrations/
+.coverage
+*.db
+/node_modules
+.env
+*.bak
+*.dat
+*.dir
+celerybeat-schedule

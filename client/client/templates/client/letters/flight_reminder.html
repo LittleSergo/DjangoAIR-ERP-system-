@@ -1,0 +1,12 @@
+{% autoescape off %}
+Hi {{ purchase.user.username }},
+
+You have your flight from {{ purchase.tickets.first.flight.departure_airport.city }}
+to {{ purchase.tickets.first.flight.destination_airport.city }}
+at {{ purchase.tickets.all.first.flight.departure_time|date:"H:i d.m.y" }}.
+
+Don`t forget your tickets and passports!
+
+Best wishes,
+DjangoAIR team
+{% endautoescape %}

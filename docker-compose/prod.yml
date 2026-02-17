@@ -1,0 +1,217 @@
+version: '3.8'
+
+services:
+  nginx:
+    restart: always
+    image: nginx:1.23-alpine
+    ports:
+      - 80:80
+    volumes:
+      - ../nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - static_volume:/apps/static
+    depends_on:
+      - staff
+      - client
+
+  staff:
+    build:
+      context: ../
+      dockerfile: staff/Dockerfile
+    command: gunicorn django_air.wsgi --bind 0.0.0.0:8000 --workers 4 --threads 4
+    # this volume is used to map the files and folders on the host to the container
+    # so if we change code on the host, code in the docker container will also be changed
+    volumes:
+      - ../staff:/apps/staff
+      - static_volume:/apps/staff/static
+    expose:
+      - 8000
+    # env_file is used to manage the env variables of the project
+    env_file:
+      - ../.env/.prod
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  redis_staff_cache-master:
+    container_name: redis_staff_cache-master
+    image: redis:7-alpine
+    command: --port 6381
+    expose:
+      - 6381
+
+  redis_staff_cache-slave:
+    container_name: redis_staff_cache-slave
+    image: redis:7-alpine
+    command: --port 6383 --slaveof redis_staff_cache-master 6381
+    expose:
+      - 6383
+
+  db:
+    image: postgres:14-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  staff_celery_worker:
+    build:
+      context: ../
+      dockerfile: staff/Dockerfile
+    command: celery -A django_air worker -l INFO
+    volumes:
+      - ../staff:/apps/staff
+    env_file:
+      - ../.env/.prod
+    depends_on:
+      - staff
+
+  staff_celery_beat:
+    build:
+      context: ../
+      dockerfile: staff/Dockerfile
+    command: celery -A django_air beat -l INFO
+    volumes:
+      - ../staff:/apps/staff
+    env_file:
+      - ../.env/.dev
+    depends_on:
+      - staff
+
+  staff_flower:
+    build:
+      context: ../
+      dockerfile: staff/Dockerfile
+    command: celery -A django_air --broker="${CELERY_BROKER}" flower --url-prefix=staff_flower
+    volumes:
+      - ../staff:/apps/staff
+    env_file:
+      - ../.env/.prod
+    expose:
+      - 5555
+    depends_on:
+      - staff
+
+  client:
+    build:
+      context: ../
+      dockerfile: client/Dockerfile
+    # '/start' is the shell script used to run the service
+    command: gunicorn django_air.wsgi --bind 0.0.0.0:8001 --workers 4 --threads 4
+    # this volume is used to map the files and folders on the host to the container
+    # so if we change code on the host, code in the docker container will also be changed
+    volumes:
+      - ../client:/apps/client
+      - static_volume:/apps/client/static
+    expose:
+      - 8001
+    # env_file is used to manage the env variables of the project
+    env_file:
+      - ../.env/.prod
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  redis_client_cache-master:
+    container_name: redis_client_cache-master
+    image: redis:7-alpine
+    command: --port 6380
+    expose:
+      - 6380
+
+  redis_client_cache-slave:
+    container_name: redis_client_cache-slave
+    image: redis:7-alpine
+    command: --port 6384 --slaveof redis_client_cache-master 6380
+    expose:
+      - 6384
+
+  client_celery_worker:
+    build:
+      context: ../
+      dockerfile: client/Dockerfile
+    command: celery -A django_air worker -l INFO
+    volumes:
+      - ../client:/apps/client
+    env_file:
+      - ../.env/.prod
+    depends_on:
+      - client
+
+  client_celery_beat:
+    build:
+      context: ../
+      dockerfile: client/Dockerfile
+    command: celery -A django_air beat -l INFO
+    volumes:
+      - ../client:/apps/client
+    env_file:
+      - ../.env/.prod
+    depends_on:
+      - client
+
+  client_flower:
+    build:
+      context: ../
+      dockerfile: client/Dockerfile
+    command: celery -A django_air --broker="${CELERY_BROKER}" flower --url-prefix=client_flower --port=5556
+    volumes:
+      - ../client:/apps/client
+    env_file:
+      - ../.env/.prod
+    expose:
+      - 5556
+    depends_on:
+      - client
+
+  client_api:
+    container_name: client_api
+    build:
+      context: ../
+      dockerfile: client_api/Dockerfile
+    command: gunicorn django_air.wsgi --bind 0.0.0.0:8002 --workers 4 --threads 4
+    volumes:
+      - ../client_api:/apps/client_api
+      - static_volume:/apps/client_api/static
+    expose:
+      - 8002
+    # env_file is used to manage the env variables of the project
+    env_file:
+      - ../.env/.dev
+    depends_on:
+      db:
+        condition: service_healthy
+
+  redis_client_api_cache-master:
+    container_name: redis_client_api_cache-master
+    image: redis:7-alpine
+    command: --port 6382
+    expose:
+      - 6382
+
+  redis_client_api_cache-slave:
+    container_name: redis_client_api_cache-slave
+    image: redis:7-alpine
+    command: --port 6385 --slaveof redis_client_api_cache-master 6382
+    expose:
+      - 6385
+
+volumes:
+  postgres_data: {}
+  static_volume: {}
+  redis_master:
+  redis_slave:

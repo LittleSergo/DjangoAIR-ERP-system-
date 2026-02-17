@@ -1,0 +1,72 @@
+{% extends 'client/base.html' %}
+{% load static %}
+
+{% block title %}Flights{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+  <div class="row head">
+    <div class="col">
+      <h1>Flights</h1>
+    </div>
+  </div>
+</div>
+{% for flight in flights %}
+<div class="container">
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">
+        <div class="row">
+          <div class="col-2">
+            {{ flight.number }}
+          </div>
+          <div class="col">
+            {{ flight.departure_airport }}
+            -> {{ flight.destination_airport }}
+          </div>
+        </div>
+      </h5>
+      <br>
+        <div>
+          <div class="row">
+            <div class="col-4">Boarding:</div>
+            <div class="col">{{flight.boarding_time|date:"H:i d.m.y" }}</div>
+          </div>
+          <div class="row">
+            <div class="col-4">Departure:</div>
+            <div class="col">{{ flight.departure_airport.IATA_code }} {{flight.departure_time|date:"H:i d.m.y" }}</div>
+          </div>
+          <div class="row">
+            <div class="col-4">Destination:</div>
+            <div class="col">{{ flight.destination_airport.IATA_code }} {{flight.arrival_time|date:"H:i d.m.y" }}</div>
+          </div>
+          <div class="row">
+            <div class="col-4">Economy tickets price:</div>
+            <div class="col">{{ flight.ticket_price }} €</div>
+          </div>
+          <div class="row">
+            <div class="col-4">Business tickets price:</div>
+            <div class="col">{{ flight.business_class_ticket_price }} €</div>
+          </div>
+          <div class="row">
+            <div class="col-4">Economy tickets available:</div>
+            <div class="col">{{ flight.available_economy_tickets }}</div>
+          </div>
+          <div class="row">
+            <div class="col-4">Business tickets available:</div>
+            <div class="col">{{ flight.available_business_tickets }}</div>
+          </div>
+          <div class="row">
+            <div class="col"><a href="{% url 'client:buy_tickets' flight.id %}?passengers={{ passengers }}" class="btn btn-primary float-sm-end">Buy tickets</a></div>
+          </div>
+        </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+{% endblock %}

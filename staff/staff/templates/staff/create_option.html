@@ -1,0 +1,18 @@
+{% extends 'staff/base.html' %}
+{% load static %}
+
+{% block title %}Create option{% endblock %}
+
+{% block head %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h1>Create Option</h1>
+  <form method="post">
+      {{ creation_form.as_p }}
+      {% csrf_token %}
+      <button class="btn btn-primary float-sm-end create" type="submit">Create</button>
+  </form>
+</div>
+{% endblock %}

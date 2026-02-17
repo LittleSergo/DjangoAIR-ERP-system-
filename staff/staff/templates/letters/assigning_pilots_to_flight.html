@@ -1,0 +1,12 @@
+{% autoescape off %}
+Hi {{ pilot.first_name }} {{ pilot.last_name }},
+
+
+You have been assigned to flight {{ flight }} from {{ flight.departure_airport.name }}, {{ flight.departure_airport.city }}, {{ flight.departure_airport.country }} to {{ flight.destination_airport.name }}, {{ flight.destination_airport.city }}, {{ flight.destination_airport.country }}.
+
+Flight departure at {{ flight.departure_time|date:"H:i d.m.y" }}.
+
+
+Best wishes,
+Django AIR team
+{% endautoescape %}
